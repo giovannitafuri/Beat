@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
 
 constexpr size_t START_ENTITY_NUM = 100;
 
@@ -13,22 +14,30 @@ typedef enum {
 struct Position {
     float x;
     float y;
-}
+};
 
-// RESOLVE: Resolve deleted entities
+// THINK: Resolve deleted entities
 struct World {
     size_t      entityCount;
     uint32_t    *componentsMaskList; 
     Position    *positionList;
-}
+};
 
 World *world_init() {
-    World *new_world = malloc(sizeof(world));
-    // TODO: check for error
+    World *new_world = (World*)malloc(sizeof(World));
+    if (!new_world) return nullptr;
+    
     new_world->entityCount = 0;
-    // TODO: use calloc for componentsMaskList
-    new_world->componentsMaskList = malloc(sizeof(new_world->componentsMaskList) * START_ENTITY_NUM);
-    new_world->positionList = malloc(sizeof(positionList->componentsMaskList) * START_ENTITY_NUM);
+    
+    new_world->componentsMaskList = (uint32_t*)calloc(START_ENTITY_NUM, sizeof(uint32_t));
+    new_world->positionList = (Position*)malloc(sizeof(Position) * START_ENTITY_NUM);
+    
+    if (!new_world->componentsMaskList || !new_world->positionList) {
+        free(new_world->componentsMaskList);
+        free(new_world->positionList);
+        free(new_world);
+        return nullptr;
+    }
     
     return new_world;
 } 
@@ -41,4 +50,4 @@ void add_position_component(World *w, uint32_t e, float x, float y) {
     w->positionList[e] = new_pos;
 }
 
-#endif ENTITY_H
+#endif // ENTITY_H
