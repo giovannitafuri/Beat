@@ -1,14 +1,14 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include <cstdio>
-#include <cstring>
-#include <cstdlib>
+#include <stdint.h>
+#include <stddef.h>
 
-constexpr size_t START_ENTITY_NUM = 100;
+constexpr size_t START_ENTITY_NUM = 124;
 
 typedef enum {
-    COMPONENT_POSITION = 1 << 0
+    COMPONENT_POSITION = 1 << 0,
+    COMPONENT_COLLIDER = 1 << 1
 } ComponentType;
 
 struct Position {
@@ -16,38 +16,29 @@ struct Position {
     float y;
 };
 
-// THINK: Resolve deleted entities
-struct World {
-    size_t      entityCount;
-    uint32_t    *componentsMaskList; 
-    Position    *positionList;
+struct Collider {
+    float width;
+    float height;
 };
 
-World *world_init() {
-    World *new_world = (World*)malloc(sizeof(World));
-    if (!new_world) return nullptr;
-    
-    new_world->entityCount = 0;
-    
-    new_world->componentsMaskList = (uint32_t*)calloc(START_ENTITY_NUM, sizeof(uint32_t));
-    new_world->positionList = (Position*)malloc(sizeof(Position) * START_ENTITY_NUM);
-    
-    if (!new_world->componentsMaskList || !new_world->positionList) {
-        free(new_world->componentsMaskList);
-        free(new_world->positionList);
-        free(new_world);
-        return nullptr;
-    }
-    
-    return new_world;
-} 
+struct Entity {
+    uint64_t id;
+    uint32_t status;
+};
 
-uint32_t create_entity(World *w) { return ++w->entityCount; }
-    
-void add_position_component(World *w, uint32_t e, float x, float y) {
-    Position new_pos = {x, y};
-    w->componentsMaskList[e] |= COMPONENT_POSITION; 
-    w->positionList[e] = new_pos;
-}
+struct World {
+    size_t      capacity;
+    size_t      entityCount;
+    uint8_t     *status; 
+    uint32_t    *componentsMaskList; 
+    Position    *positionList;
+    Collider    *colliderList;
+};
+
+World *world_init();
+Entity get_entity(World *w, uint64_t id);
+Entity create_entity(World *w);
+void add_position_component(World *w, uint32_t e, float x, float y);
+void add_collider_component(World *w, uint32_t e, float width, float height);
 
 #endif // ENTITY_H

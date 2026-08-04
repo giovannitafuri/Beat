@@ -188,7 +188,7 @@ private:
     }
 
     bool needs_resize() {
-        return ((double)(count + 1) / (double)capacity) >= LOAD_FACTOR;
+        return ((float)(count + 1) / (float)capacity) >= LOAD_FACTOR;
     }
 
     // A resize can't just copy the old array into a bigger one: each

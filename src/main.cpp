@@ -1,5 +1,6 @@
 #include <SDL3/SDL.h>
 #include <cstdio>
+#include <cstdlib>
 #include "entity.h"
 #include "beat_time.h"
 #include "assets.h"
@@ -67,8 +68,8 @@ int main(int argc, char* argv[]) {
 
     Assets::init(ctx.renderer);
 
-    uint32_t player = create_entity(world);
-    add_position_component(world, player, 400.0f, 300.0f);
+    Entity player = create_entity(world);
+    add_position_component(world, player.id, 400.0f, 300.0f);
 
     uint64_t last_time = SDL_GetPerformanceCounter();
     uint64_t freq = SDL_GetPerformanceFrequency();
@@ -105,6 +106,8 @@ int main(int argc, char* argv[]) {
 
     free(world->componentsMaskList);
     free(world->positionList);
+    free(world->colliderList);
+    free(world->status);
     free(world);
 
     Assets::shutdown();
