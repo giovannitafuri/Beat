@@ -1,10 +1,24 @@
 #ifndef LEVEL_H
 #define LEVEL_H
 
+
+
 #include "entity.h"
+
 
 constexpr float CELL_SIZE = 64.0f;
 constexpr uint32_t MAX_ENTITY_PER_CELL = 16;
+
+// THINK: should i save time?
+struct Collision {
+    Entity e1;
+    Entity e2;
+};
+
+constexpr uint32_t MAX_COLLISIONS = 1024;
+extern Collision collisionsList[MAX_COLLISIONS];
+extern uint32_t collisionsCount;
+
 
 struct GridCell {
     Entity entities[MAX_ENTITY_PER_CELL];
@@ -29,10 +43,12 @@ inline void world_to_cell(float wx, float wy, uint32_t *cx, uint32_t *cy) {
     *cy = (uint32_t)(wy / CELL_SIZE);
 }
 
+void collisions_list_clear();
 void clear_grid(SpatialGrid *g);
 void grid_insert(SpatialGrid *g, World *w, Entity e);
 void grid_rebuild(SpatialGrid *g, World *w);
 void collision_system_grid(World *w, SpatialGrid *g);
+void collisions_list_clear();
 bool load_level(const char* filepath, SpatialGrid* grid);
 
 #endif // LEVEL_H

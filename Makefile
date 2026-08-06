@@ -8,7 +8,8 @@ BIN_DIR     := $(BUILD_DIR)/bin
 
 # ==== Compiler and flags ====
 CXX      := g++
-CXXFLAGS := -std=c++17 -I$(INC_DIR)
+IMGUI_DIR := imgui-1.92.9b
+CXXFLAGS := -std=c++17 -I$(INC_DIR) -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 LDFLAGS  :=
 
 # Extended warnings, always on: help catch bugs at compile time
@@ -38,8 +39,17 @@ ifdef SANITIZE
 endif
 
 # ==== Source/object files ====
-SRCS := $(wildcard $(SRC_DIR)/*.cpp)
-OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
+VPATH := $(SRC_DIR):$(IMGUI_DIR):$(IMGUI_DIR)/backends
+SRCS := $(wildcard $(SRC_DIR)/*.cpp) \
+        $(IMGUI_DIR)/imgui.cpp \
+        $(IMGUI_DIR)/imgui_demo.cpp \
+        $(IMGUI_DIR)/imgui_draw.cpp \
+        $(IMGUI_DIR)/imgui_tables.cpp \
+        $(IMGUI_DIR)/imgui_widgets.cpp \
+        $(IMGUI_DIR)/backends/imgui_impl_sdl3.cpp \
+        $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer3.cpp
+
+OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(notdir $(SRCS)))
 DEPS := $(OBJS:.o=.d)
 
 # ==== Main targets ====
@@ -53,7 +63,7 @@ $(BIN_DIR)/$(TARGET): $(OBJS) | $(BIN_DIR)
 
 # Compile each .cpp into .o, also generating dependency files (.d)
 # so changed headers trigger automatic recompilation.
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
+$(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
 -include $(DEPS)

@@ -1,9 +1,11 @@
 #include "assets.h"
 #include <cstring>
 #include <cstdlib>
+#include "atlas.h"
+#include <SDL3_image/SDL_image.h>
+#include <cstring>
 #include <cstdio>
 #include <SDL3/SDL.h>
-#include <SDL3_image/SDL_image.h>
 
 namespace Assets {
 
@@ -48,6 +50,11 @@ namespace Assets {
         atlas.num_sprites = (int)fw / sprite_width;
 
         atlases.insert(filename, atlas);
+
+        if (loaded_atlas_count < 64) {
+            loaded_atlas_names[loaded_atlas_count++] = strdup(filename);
+        }
+
         return true;
     }
 

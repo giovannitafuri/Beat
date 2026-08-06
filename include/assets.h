@@ -13,6 +13,8 @@ namespace Assets {
 
     // --- Global Asset Maps ---
     extern BeatMap<Atlas> atlases;
+    extern const char* loaded_atlas_names[64];
+    extern int loaded_atlas_count;
 
     // Call this at startup
     void init(SDL_Renderer* renderer);

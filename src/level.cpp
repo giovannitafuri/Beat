@@ -2,6 +2,13 @@
 #include <cstdio>
 #include <cstdlib>
 
+Collision collisionsList[MAX_COLLISIONS];
+uint32_t collisionsCount = 0;
+
+void collisions_list_clear() {
+    collisionsCount = 0;
+}
+
 void clear_grid(SpatialGrid *g) {
     for (uint32_t i = 0; i < g->width; i++) {
         for (uint32_t j = 0; j < g->height; j++) {
@@ -61,8 +68,10 @@ void collision_system_grid(World *w, SpatialGrid *g) {
 
                             if (aabb_intersect(w->positionList[idA], w->colliderList[idA],
                                                w->positionList[idB], w->colliderList[idB])) {
-                                // TODO: Handle collision response
-                                // on_collision(w, idA, idB);
+                                if (collisionsCount < MAX_COLLISIONS) {
+                                    Collision c = {get_entity(w, idA), get_entity(w, idB)};
+                                    collisionsList[collisionsCount++] = c;
+                                }
                             }
                         }
                     }

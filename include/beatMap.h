@@ -34,7 +34,7 @@
 //   a shallow copy of the raw pointer would lead to double-free.
 // ============================================================================
 
-constexpr float LOAD_FACTOR = 0.8f;
+constexpr float LOAD_FACTOR = 0.85f;
 
 template<typename Value>
 class BeatMap {
