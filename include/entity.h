@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-constexpr size_t START_ENTITY_NUM = 124;
+constexpr size_t START_ENTITY_NUM = 128;
 
 typedef enum {
     COMPONENT_POSITION = 1 << 0,
@@ -43,6 +43,7 @@ struct World {
 };
 
 World *world_init();
+bool world_resize(World *w);
 Entity get_entity(World *w, uint64_t id);
 Entity create_entity(World *w);
 void add_position_component(World *w, uint32_t e, float x, float y);

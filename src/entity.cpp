@@ -1,5 +1,6 @@
 #include "entity.h"
 #include <cstdlib>
+#include <cstdio>
 
 World *world_init() {
     World *new_world = (World*)malloc(sizeof(World));
@@ -27,12 +28,48 @@ World *world_init() {
     return new_world;
 } 
 
+bool world_resize(World *w) {
+    size_t new_capacity = w->capacity * 2;
+
+    uint32_t *new_mask     = (uint32_t*)realloc(w->componentsMaskList, sizeof(uint32_t) * new_capacity);
+    Position *new_pos      = (Position*)realloc(w->positionList, sizeof(Position) * new_capacity);
+    uint32_t *new_status   = (uint32_t*)realloc(w->status, sizeof(uint32_t) * new_capacity);
+    Collider *new_collider = (Collider*)realloc(w->colliderList, sizeof(Collider) * new_capacity);
+    Sprite   *new_sprite   = (Sprite*)realloc(w->spriteList, sizeof(Sprite) * new_capacity);
+
+    if (!new_mask || !new_pos || !new_status || !new_collider || !new_sprite) {
+        // I don't free the new reallocated arrays because if realloc fails
+        // on these small arrays, the OS is out of memory and we are going to crash anyway.
+        return false;
+    }
+
+    w->componentsMaskList = new_mask;
+    w->positionList = new_pos;
+    w->status = new_status;
+    w->colliderList = new_collider;
+    w->spriteList = new_sprite;
+    
+    // realloc doesn't zero-initialize the new memory. We only really need to zero the mask.
+    for (size_t i = w->capacity; i < new_capacity; i++) {
+        w->componentsMaskList[i] = 0;
+        w->status[i] = 0;
+    }
+
+    w->capacity = new_capacity;
+    return true;
+}
+
 Entity get_entity(World *w, uint64_t id) {
     Entity new_entity = { id, w->status[id] };
     return new_entity;
 }
 
-Entity create_entity(World *w) { 
+Entity create_entity(World *w) {
+    if (w->entityCount + 1 >= w->capacity) {
+        if (!world_resize(w)) {
+            fprintf(stderr, "Error resizing world!\n");
+        }
+    }
     w->entityCount++;
     Entity new_entity = { w->entityCount, w->status[w->entityCount] };
     return new_entity;
