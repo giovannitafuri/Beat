@@ -1,4 +1,4 @@
-#include "assets.h"
+#include "Assets.h"
 #include <SDL3/SDL.h>
 
 namespace Assets {

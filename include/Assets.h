@@ -1,10 +1,10 @@
 #ifndef ASSETS_H
 #define ASSETS_H
 
-#include "beatMap.h"
+#include "BeatMap.h"
 
 // --- Umbrella Includes ---
-#include "atlas.h"
+#include "Atlas.h"
 // #include "sounds.h" // in futuro
 
 struct SDL_Renderer;

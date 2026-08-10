@@ -3,7 +3,7 @@
 
 
 
-#include "entity.h"
+#include "Entity.h"
 
 
 constexpr float CELL_SIZE = 64.0f;

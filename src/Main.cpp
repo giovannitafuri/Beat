@@ -1,0 +1,156 @@
+#include <SDL3/SDL.h>
+#include <cstdio>
+#include <cstdlib>
+#include "Entity.h"
+#include "BeatTime.h"
+#include "Assets.h"
+#include "Level.h"
+#include "Event.h"
+#include "Editor.h"
+#include "RenderSystem.h"
+#include "imgui.h"
+#include "imgui_impl_sdl3.h"
+#include "imgui_impl_sdlrenderer3.h"
+
+float Time::delta = 0.0f;
+
+struct EngineContext {
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    bool is_running;
+};
+
+bool engine_init(EngineContext* ctx) {
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        fprintf(stderr, "SDL_Init Error: %s\n", SDL_GetError());
+        return false;
+    }
+
+    ctx->window = SDL_CreateWindow("Beat Engine", 800, 600, 0);
+    if (!ctx->window) {
+        fprintf(stderr, "SDL_CreateWindow Error: %s\n", SDL_GetError());
+        SDL_Quit();
+        return false;
+    }
+
+    ctx->renderer = SDL_CreateRenderer(ctx->window, nullptr);
+    if (!ctx->renderer) {
+        fprintf(stderr, "SDL_CreateRenderer Error: %s\n", SDL_GetError());
+        SDL_DestroyWindow(ctx->window);
+        SDL_Quit();
+        return false;
+    }
+
+    ctx->is_running = true;
+    return true;
+}
+
+void engine_shutdown(EngineContext* ctx) {
+    if (ctx->renderer) {
+        SDL_DestroyRenderer(ctx->renderer);
+        ctx->renderer = nullptr;
+    }
+    if (ctx->window) {
+        SDL_DestroyWindow(ctx->window);
+        ctx->window = nullptr;
+    }
+    SDL_Quit();
+}
+
+int main(int argc, char* argv[]) {
+    (void)argc;
+    (void)argv;
+
+    EngineContext ctx = {nullptr, nullptr, false};
+
+    if (!engine_init(&ctx)) {
+        return 1;
+    }
+
+    World* world = world_init();
+    if (!world) {
+        engine_shutdown(&ctx);
+        return 1;
+    }
+
+    Assets::init(ctx.renderer);
+    init_event_machine();
+
+    EditorState editor_state;
+    editor_init(ctx.window, ctx.renderer, &editor_state);
+
+    SpatialGrid grid = { (GridCell*)calloc(64 * 64, sizeof(GridCell)), 64, 64 };
+    
+    Entity player = create_entity(world);
+    add_position_component(world, player.id, 400.0f, 300.0f);
+
+    uint64_t last_time = SDL_GetPerformanceCounter();
+    uint64_t freq = SDL_GetPerformanceFrequency();
+
+    SDL_Event event;
+    while (ctx.is_running) {
+        uint64_t current_time = SDL_GetPerformanceCounter();
+        Time::delta = (float)((double)(current_time - last_time) / (double)freq);
+        last_time = current_time;
+
+        while (SDL_PollEvent(&event)) {
+            editor_process_event(&event, &editor_state, world);
+            
+            if (event.type == SDL_EVENT_QUIT) {
+                ctx.is_running = false;
+            }
+        }
+
+        editor_update(&editor_state, world);
+        
+        // --- Physics & Logic Update ---
+        if (!editor_state.is_editor_mode) {
+            grid_rebuild(&grid, world);
+            collision_system_grid(world, &grid);
+            
+            for (uint32_t i = 0; i < collisionsCount; i++) {
+                // Collision c = collisionsList[i];
+                // TODO: Handle entity specific resolution (e.g. wall sliding, damage)
+            }
+            
+            collisions_list_clear();
+        }
+
+        // --- Render ---
+        ImGui_ImplSDLRenderer3_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
+        ImGui::NewFrame();
+
+        editor_draw_ui(&editor_state, world);
+
+        SDL_SetRenderDrawColor(ctx.renderer, 30, 30, 30, 255);
+        SDL_RenderClear(ctx.renderer);
+
+        render_system(world, ctx.renderer, editor_state.camera_x, editor_state.camera_y);
+        
+        editor_draw_overlay(&editor_state, world, ctx.renderer);
+
+        // Render ImGui on top of everything
+        ImGui::Render();
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), ctx.renderer);
+        
+        SDL_RenderPresent(ctx.renderer);
+        
+        // --- End of Frame ---
+        events_machine_clear();
+    }
+
+    free(world->componentsMaskList);
+    free(world->positionList);
+    free(world->colliderList);
+    free(world->spriteList);
+    free(world->status);
+    free(world);
+    free(grid.cells);
+
+    editor_shutdown();
+    Assets::shutdown();
+
+    engine_shutdown(&ctx);
+    return 0;
+}

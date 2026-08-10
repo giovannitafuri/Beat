@@ -1,7 +1,7 @@
-#include "assets.h"
+#include "Assets.h"
 #include <cstring>
 #include <cstdlib>
-#include "atlas.h"
+#include "Atlas.h"
 #include <SDL3_image/SDL_image.h>
 #include <cstring>
 #include <cstdio>
