@@ -8,11 +8,13 @@
 #include "Event.h"
 #include "Editor.h"
 #include "RenderSystem.h"
+#include "Input.h"
+#include "Systems.h"
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
 
-float Time::delta = 0.0f;
+float Time::Delta = 0.0f;
 
 struct EngineContext {
     SDL_Window* window;
@@ -83,6 +85,8 @@ int main(int argc, char* argv[]) {
     
     Entity player = create_entity(world);
     add_position_component(world, player.id, 400.0f, 300.0f);
+    world->componentsMaskList[player.id] |= COMPONENT_PLAYER;
+    add_velocity_component(world, player.id, 0.0f, 0.0f);
 
     uint64_t last_time = SDL_GetPerformanceCounter();
     uint64_t freq = SDL_GetPerformanceFrequency();
@@ -90,7 +94,7 @@ int main(int argc, char* argv[]) {
     SDL_Event event;
     while (ctx.is_running) {
         uint64_t current_time = SDL_GetPerformanceCounter();
-        Time::delta = (float)((double)(current_time - last_time) / (double)freq);
+        Time::Delta = (float)((double)(current_time - last_time) / (double)freq);
         last_time = current_time;
 
         while (SDL_PollEvent(&event)) {
@@ -101,15 +105,19 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        input_update();
+
         editor_update(&editor_state, world);
         
         // --- Physics & Logic Update ---
         if (!editor_state.is_editor_mode) {
+            movement_system(world);
+            
             grid_rebuild(&grid, world);
             collision_system_grid(world, &grid);
             
-            for (uint32_t i = 0; i < collisionsCount; i++) {
-                // Collision c = collisionsList[i];
+            for (uint32_t i = 0; i < CollisionsCount; i++) {
+                // Collision c = CollisionsList[i];
                 // TODO: Handle entity specific resolution (e.g. wall sliding, damage)
             }
             
@@ -140,12 +148,7 @@ int main(int argc, char* argv[]) {
         events_machine_clear();
     }
 
-    free(world->componentsMaskList);
-    free(world->positionList);
-    free(world->colliderList);
-    free(world->spriteList);
-    free(world->status);
-    free(world);
+    world_free(world);
     free(grid.cells);
 
     editor_shutdown();

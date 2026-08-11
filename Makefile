@@ -79,7 +79,9 @@ $(BIN_DIR):
 run: all
 	./$(BIN_DIR)/$(TARGET)
 
-rebuild: clean all
+rebuild:
+	$(MAKE) clean
+	$(MAKE) all
 
 # Static code analysis
 check:

@@ -49,10 +49,10 @@ namespace Assets {
         atlas.sprite_height = (int)fh;
         atlas.num_sprites = (int)fw / sprite_width;
 
-        atlases.insert(filename, atlas);
+        Atlases.insert(filename, atlas);
 
-        if (loaded_atlas_count < 64) {
-            loaded_atlas_names[loaded_atlas_count++] = strdup(filename);
+        if (LoadedAtlasCount < 64) {
+            LoadedAtlasNames[LoadedAtlasCount++] = strdup(filename);
         }
 
         return true;

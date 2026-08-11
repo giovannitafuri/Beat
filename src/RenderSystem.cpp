@@ -11,7 +11,7 @@ void render_system(World* world, SDL_Renderer* renderer, float camera_x, float c
             }
             
             Sprite& spr = world->spriteList[i];
-            Assets::Atlas* a = Assets::atlases.find(spr.atlas_name);
+            Assets::Atlas* a = Assets::Atlases.find(spr.atlas_name);
             if (a && a->texture) {
                 SDL_FRect dst;
                 dst.x = x - camera_x;

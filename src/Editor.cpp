@@ -105,7 +105,7 @@ void editor_draw_ui(EditorState* state, World* world) {
     ImGui::Begin("Beat Engine - Editor");
     ImGui::Text("Editor Mode Active");
     ImGui::Text("Press TAB to toggle Play mode");
-    ImGui::Text("Delta Time: %.4f", (double)Time::delta);
+    ImGui::Text("Delta Time: %.4f", (double)Time::Delta);
     ImGui::Text("Entities: %zu", world->entityCount);
     
     ImGui::Separator();
@@ -114,9 +114,9 @@ void editor_draw_ui(EditorState* state, World* world) {
     ImGui::Text("Asset Browser");
     ImGui::Text("Drag images to place them in the world!");
 
-    for (int i = 0; i < Assets::loaded_atlas_count; i++) {
-        const char* atlas_name = Assets::loaded_atlas_names[i];
-        Assets::Atlas* a = Assets::atlases.find(atlas_name);
+    for (int i = 0; i < Assets::LoadedAtlasCount; i++) {
+        const char* atlas_name = Assets::LoadedAtlasNames[i];
+        Assets::Atlas* a = Assets::Atlases.find(atlas_name);
         if (a && a->texture) {
             ImGui::PushID(i);
             ImGui::ImageButton(atlas_name, (ImTextureID)(intptr_t)a->texture, ImVec2(64, 64));
@@ -147,7 +147,7 @@ void editor_draw_ui(EditorState* state, World* world) {
                 
                 if (world->componentsMaskList[i] & COMPONENT_SPRITE) {
                     Sprite& spr = world->spriteList[i];
-                    Assets::Atlas* a = Assets::atlases.find(spr.atlas_name);
+                    Assets::Atlas* a = Assets::Atlases.find(spr.atlas_name);
                     if (a) { w = a->sprite_width; h = a->sprite_height; }
                 }
                 if (world->componentsMaskList[i] & COMPONENT_COLLIDER) {
@@ -175,7 +175,7 @@ void editor_draw_ui(EditorState* state, World* world) {
                 float w = 32, h = 32;
                 if (world->componentsMaskList[state->selected_entity_id] & COMPONENT_SPRITE) {
                     Sprite& spr = world->spriteList[state->selected_entity_id];
-                    Assets::Atlas* a = Assets::atlases.find(spr.atlas_name);
+                    Assets::Atlas* a = Assets::Atlases.find(spr.atlas_name);
                     if (a) { w = a->sprite_width; h = a->sprite_height; }
                 }
                 add_collider_component(world, state->selected_entity_id, w, h);

@@ -26,7 +26,7 @@ struct EventsMachine {
     uint32_t countB;
 };
 
-extern EventsMachine eventsMachine;
+extern EventsMachine GlobalEventsMachine;
 
 void init_event_machine();
 void add_event(Event e);

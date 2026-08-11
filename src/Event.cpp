@@ -1,41 +1,41 @@
 #include "Event.h"
 
-EventsMachine eventsMachine;
+EventsMachine GlobalEventsMachine;
 
 void init_event_machine() {
-    eventsMachine.currentList = 1; // A
-    eventsMachine.countA = 0;
-    eventsMachine.countB = 0;
+    GlobalEventsMachine.currentList = 1; // A
+    GlobalEventsMachine.countA = 0;
+    GlobalEventsMachine.countB = 0;
 }
 
 void add_event(Event e) {
-    if (eventsMachine.currentList == 1) { // A
-        if (eventsMachine.countB < MAX_EVENTS) {
-            eventsMachine.eventsListB[eventsMachine.countB++] = e;
+    if (GlobalEventsMachine.currentList == 1) { // A
+        if (GlobalEventsMachine.countB < MAX_EVENTS) {
+            GlobalEventsMachine.eventsListB[GlobalEventsMachine.countB++] = e;
         }
     } else {
-        if (eventsMachine.countA < MAX_EVENTS) {
-            eventsMachine.eventsListA[eventsMachine.countA++] = e;
+        if (GlobalEventsMachine.countA < MAX_EVENTS) {
+            GlobalEventsMachine.eventsListA[GlobalEventsMachine.countA++] = e;
         }
     }
 }
 
 Event* get_events(uint32_t *out_count) {
-    if (eventsMachine.currentList == 1) {
-        *out_count = eventsMachine.countA;
-        return eventsMachine.eventsListA;
+    if (GlobalEventsMachine.currentList == 1) {
+        *out_count = GlobalEventsMachine.countA;
+        return GlobalEventsMachine.eventsListA;
     } else {
-        *out_count = eventsMachine.countB;
-        return eventsMachine.eventsListB;
+        *out_count = GlobalEventsMachine.countB;
+        return GlobalEventsMachine.eventsListB;
     }
 }
 
 void events_machine_clear() {
-    if (eventsMachine.currentList == 1) {
-        eventsMachine.currentList = 2; // Swap to B
-        eventsMachine.countA = 0;
+    if (GlobalEventsMachine.currentList == 1) {
+        GlobalEventsMachine.currentList = 2; // Swap to B
+        GlobalEventsMachine.countA = 0;
     } else {
-        eventsMachine.currentList = 1; // Swap to A
-        eventsMachine.countB = 0;
+        GlobalEventsMachine.currentList = 1; // Swap to A
+        GlobalEventsMachine.countB = 0;
     }
 }

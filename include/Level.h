@@ -16,8 +16,8 @@ struct Collision {
 };
 
 constexpr uint32_t MAX_COLLISIONS = 1024;
-extern Collision collisionsList[MAX_COLLISIONS];
-extern uint32_t collisionsCount;
+extern Collision CollisionsList[MAX_COLLISIONS];
+extern uint32_t CollisionsCount;
 
 
 struct GridCell {

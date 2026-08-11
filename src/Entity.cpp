@@ -7,20 +7,26 @@ World *world_init() {
     if (!new_world) return nullptr;
 
     new_world->capacity = START_ENTITY_NUM; 
-    new_world->entityCount = 0;
+    // In C/C++, underflow/overflow of unsigned types (like size_t) is guaranteed by the standard.
+    // Assigning -1 to an unsigned type wraps it around to its maximum value (e.g. SIZE_MAX).
+    // This way, the first create_entity() call will do entityCount++, which through guaranteed 
+    // overflow will wrap it exactly back to 0.
+    new_world->entityCount = -1;
 
-    new_world->componentsMaskList = (uint32_t*)calloc(START_ENTITY_NUM, sizeof(uint32_t));
+    new_world->componentsMaskList = (uint64_t*)calloc(START_ENTITY_NUM, sizeof(uint64_t));
     new_world->positionList       = (Position*)malloc(sizeof(Position) * START_ENTITY_NUM);
     new_world->status             = (uint32_t*)malloc(sizeof(uint32_t) * START_ENTITY_NUM);
     new_world->colliderList       = (Collider*)malloc(sizeof(Collider) * START_ENTITY_NUM);
     new_world->spriteList         = (Sprite*)malloc(sizeof(Sprite) * START_ENTITY_NUM);
+    new_world->velocityList       = (Velocity*)malloc(sizeof(Velocity) * START_ENTITY_NUM);
     
-    if (!new_world->componentsMaskList || !new_world->positionList || !new_world->status || !new_world->colliderList || !new_world->spriteList) {
+    if (!new_world->componentsMaskList || !new_world->positionList || !new_world->status || !new_world->colliderList || !new_world->spriteList || !new_world->velocityList) {
         free(new_world->componentsMaskList);
         free(new_world->positionList);
         free(new_world->status);
         free(new_world->colliderList);
         free(new_world->spriteList);
+        free(new_world->velocityList);
         free(new_world);
         return nullptr;
     }
@@ -31,13 +37,14 @@ World *world_init() {
 bool world_resize(World *w) {
     size_t new_capacity = w->capacity * 2;
 
-    uint32_t *new_mask     = (uint32_t*)realloc(w->componentsMaskList, sizeof(uint32_t) * new_capacity);
+    uint64_t *new_mask     = (uint64_t*)realloc(w->componentsMaskList, sizeof(uint64_t) * new_capacity);
     Position *new_pos      = (Position*)realloc(w->positionList, sizeof(Position) * new_capacity);
     uint32_t *new_status   = (uint32_t*)realloc(w->status, sizeof(uint32_t) * new_capacity);
     Collider *new_collider = (Collider*)realloc(w->colliderList, sizeof(Collider) * new_capacity);
     Sprite   *new_sprite   = (Sprite*)realloc(w->spriteList, sizeof(Sprite) * new_capacity);
+    Velocity *new_velocity = (Velocity*)realloc(w->velocityList, sizeof(Velocity) * new_capacity);
 
-    if (!new_mask || !new_pos || !new_status || !new_collider || !new_sprite) {
+    if (!new_mask || !new_pos || !new_status || !new_collider || !new_sprite || !new_velocity) {
         // I don't free the new reallocated arrays because if realloc fails
         // on these small arrays, the OS is out of memory and we are going to crash anyway.
         return false;
@@ -48,6 +55,7 @@ bool world_resize(World *w) {
     w->status = new_status;
     w->colliderList = new_collider;
     w->spriteList = new_sprite;
+    w->velocityList = new_velocity;
     
     // realloc doesn't zero-initialize the new memory. We only really need to zero the mask.
     for (size_t i = w->capacity; i < new_capacity; i++) {
@@ -87,8 +95,33 @@ void add_collider_component(World *w, uint32_t e, float width, float height) {
     w->colliderList[e] = new_col;
 }
 
-void add_sprite_component(World *w, uint32_t e, const char* atlas_name, int frame_index) {
+void add_sprite_component(World *w, uint32_t e, const char* atlas_name, uint64_t frame_index) {
     Sprite new_spr = {atlas_name, frame_index};
     w->componentsMaskList[e] |= COMPONENT_SPRITE;
     w->spriteList[e] = new_spr;
+}
+
+void add_velocity_component(World *w, uint32_t e, float vx, float vy) {
+    Velocity new_vel = {vx, vy};
+    w->componentsMaskList[e] |= COMPONENT_VELOCITY;
+    w->velocityList[e] = new_vel;
+}
+
+void world_clear(World *w) {
+    w->entityCount = -1;
+    for (size_t i = 0; i < w->capacity; i++) {
+        w->componentsMaskList[i] = 0;
+        w->status[i] = 0;
+    }
+}
+
+void world_free(World *w) {
+    if (!w) return;
+    free(w->componentsMaskList);
+    free(w->positionList);
+    free(w->colliderList);
+    free(w->spriteList);
+    free(w->velocityList);
+    free(w->status);
+    free(w);
 }

@@ -2,7 +2,7 @@
 #define BEAT_TIME_H
 
 namespace Time {
-    extern float delta;
+    extern float Delta;
 }
 
 #endif // BEAT_TIME_H
