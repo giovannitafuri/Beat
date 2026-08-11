@@ -1,7 +1,8 @@
 #include "RenderSystem.h"
 #include "Assets.h"
+#include "Settings.h"
 
-void render_system(World* world, SDL_Renderer* renderer, float camera_x, float camera_y) {
+void render_system(World* world, SDL_Renderer* renderer, Camera* camera) {
     for (size_t i = 1; i <= world->entityCount; ++i) {
         if (world->componentsMaskList[i] & COMPONENT_SPRITE) {
             float x = 0, y = 0;
@@ -14,8 +15,8 @@ void render_system(World* world, SDL_Renderer* renderer, float camera_x, float c
             Assets::Atlas* a = Assets::Atlases.find(spr.atlas_name);
             if (a && a->texture) {
                 SDL_FRect dst;
-                dst.x = x - camera_x;
-                dst.y = y - camera_y;
+                dst.x = x - camera->x + (GlobalSettings.screenWidth / 2.0f);
+                dst.y = y - camera->y + (GlobalSettings.screenHeight / 2.0f);
                 dst.w = a->sprite_width;
                 dst.h = a->sprite_height;
                 

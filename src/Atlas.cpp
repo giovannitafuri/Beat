@@ -6,6 +6,7 @@
 #include <cstring>
 #include <cstdio>
 #include <SDL3/SDL.h>
+#include "Assert.h"
 
 namespace Assets {
 
@@ -18,25 +19,25 @@ namespace Assets {
 
         const char* ext = strrchr(filename, '.');
         if (!ext || strcmp(ext, ".png") != 0) {
-            fprintf(stderr, "Error: Only .png files are supported: %s\n", filepath);
+            ASSERT(false, "Error: Only .png files are supported");
             return false;
         }
 
         const char* underscore = strrchr(filename, '_');
         if (!underscore) {
-            fprintf(stderr, "Error: Atlas filename must end with _WIDTH (e.g. _32.png): %s\n", filepath);
+            ASSERT(false, "Error: Atlas filename must end with _WIDTH (e.g. _32.png)");
             return false;
         }
 
         int sprite_width = atoi(underscore + 1);
         if (sprite_width <= 0) {
-            fprintf(stderr, "Error: Invalid sprite width in filename: %s\n", filepath);
+            ASSERT(false, "Error: Invalid sprite width in filename");
             return false;
         }
 
         SDL_Texture* tex = IMG_LoadTexture(g_renderer, filepath);
         if (!tex) {
-            fprintf(stderr, "IMG_LoadTexture Error: %s\n", SDL_GetError());
+            ASSERT(false, "IMG_LoadTexture Error");
             return false;
         }
         

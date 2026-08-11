@@ -3,7 +3,8 @@
 
 #include <SDL3/SDL.h>
 #include "Entity.h"
+#include "Camera.h"
 
-void render_system(World* world, SDL_Renderer* renderer, float camera_x, float camera_y);
+void render_system(World* world, SDL_Renderer* renderer, Camera* camera);
 
 #endif // RENDER_SYSTEM_H

@@ -1,9 +1,11 @@
 #include "Entity.h"
 #include <cstdlib>
 #include <cstdio>
+#include "Assert.h"
 
 World *world_init() {
     World *new_world = (World*)malloc(sizeof(World));
+    ASSERT(new_world != nullptr, "Failed to allocate World");
     if (!new_world) return nullptr;
 
     new_world->capacity = START_ENTITY_NUM; 
@@ -28,6 +30,7 @@ World *world_init() {
         free(new_world->spriteList);
         free(new_world->velocityList);
         free(new_world);
+        ASSERT(false, "Failed to allocate World component arrays");
         return nullptr;
     }
     
@@ -47,6 +50,7 @@ bool world_resize(World *w) {
     if (!new_mask || !new_pos || !new_status || !new_collider || !new_sprite || !new_velocity) {
         // I don't free the new reallocated arrays because if realloc fails
         // on these small arrays, the OS is out of memory and we are going to crash anyway.
+        ASSERT(false, "Failed to reallocate World arrays");
         return false;
     }
 
@@ -74,8 +78,11 @@ Entity get_entity(World *w, uint64_t id) {
 
 Entity create_entity(World *w) {
     if (w->entityCount + 1 >= w->capacity) {
-        if (!world_resize(w)) {
-            fprintf(stderr, "Error resizing world!\n");
+        bool resized = world_resize(w);
+        ASSERT(resized, "Error resizing world!");
+        if (!resized) {
+            // Keep going, although we might crash soon if we exceed capacity.
+            // Ideally we'd return a null entity here, but for now we just log an assert.
         }
     }
     w->entityCount++;

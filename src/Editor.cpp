@@ -4,6 +4,7 @@
 #include "imgui_impl_sdlrenderer3.h"
 #include "Assets.h"
 #include "BeatTime.h"
+#include "Settings.h"
 #include <cstring>
 
 void editor_init(SDL_Window* window, SDL_Renderer* renderer, EditorState* state) {
@@ -19,8 +20,6 @@ void editor_init(SDL_Window* window, SDL_Renderer* renderer, EditorState* state)
     state->is_editor_mode = true;
     state->draw_colliders_mode = false;
     state->selected_entity_id = 0;
-    state->camera_x = 0;
-    state->camera_y = 0;
     state->is_drawing_rect = false;
     state->rect_start_x = 0;
     state->rect_start_y = 0;
@@ -33,7 +32,7 @@ void editor_shutdown() {
     ImGui::DestroyContext();
 }
 
-void editor_process_event(SDL_Event* event, EditorState* state, World* world) {
+void editor_process_event(SDL_Event* event, EditorState* state, World* world, Camera* camera) {
     ImGui_ImplSDL3_ProcessEvent(event);
     
     if (event->type == SDL_EVENT_KEY_DOWN && event->key.key == SDLK_TAB) {
@@ -45,8 +44,8 @@ void editor_process_event(SDL_Event* event, EditorState* state, World* world) {
         // Panning with Middle Mouse Button
         if (event->type == SDL_EVENT_MOUSE_MOTION) {
             if (event->motion.state & SDL_BUTTON_MMASK) {
-                state->camera_x -= event->motion.xrel;
-                state->camera_y -= event->motion.yrel;
+                camera->x -= event->motion.xrel;
+                camera->y -= event->motion.yrel;
             }
         }
         
@@ -54,14 +53,14 @@ void editor_process_event(SDL_Event* event, EditorState* state, World* world) {
         if (state->draw_colliders_mode) {
             if (event->type == SDL_EVENT_MOUSE_BUTTON_DOWN && event->button.button == SDL_BUTTON_LEFT) {
                 state->is_drawing_rect = true;
-                state->rect_start_x = event->button.x + state->camera_x;
-                state->rect_start_y = event->button.y + state->camera_y;
+                state->rect_start_x = event->button.x + camera->x - (GlobalSettings.screenWidth / 2.0f);
+                state->rect_start_y = event->button.y + camera->y - (GlobalSettings.screenHeight / 2.0f);
             }
             else if (event->type == SDL_EVENT_MOUSE_BUTTON_UP && event->button.button == SDL_BUTTON_LEFT) {
                 if (state->is_drawing_rect) {
                     state->is_drawing_rect = false;
-                    float end_x = event->button.x + state->camera_x;
-                    float end_y = event->button.y + state->camera_y;
+                    float end_x = event->button.x + camera->x - (GlobalSettings.screenWidth / 2.0f);
+                    float end_y = event->button.y + camera->y - (GlobalSettings.screenHeight / 2.0f);
                     
                     float x = (state->rect_start_x < end_x) ? state->rect_start_x : end_x;
                     float y = (state->rect_start_y < end_y) ? state->rect_start_y : end_y;
@@ -79,7 +78,7 @@ void editor_process_event(SDL_Event* event, EditorState* state, World* world) {
     }
 }
 
-void editor_update(EditorState* state, World* world) {
+void editor_update(EditorState* state, World* world, Camera* camera) {
     ImGuiIO& io = ImGui::GetIO();
     if (state->is_editor_mode) {
         if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
@@ -88,7 +87,7 @@ void editor_update(EditorState* state, World* world) {
                 // Check if released over game view (not hovering any ImGui window)
                 if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
                     Entity e = create_entity(world);
-                    add_position_component(world, e.id, io.MousePos.x + state->camera_x, io.MousePos.y + state->camera_y);
+                    add_position_component(world, e.id, io.MousePos.x + camera->x - (GlobalSettings.screenWidth / 2.0f), io.MousePos.y + camera->y - (GlobalSettings.screenHeight / 2.0f));
                     add_sprite_component(world, e.id, state->dragged_asset, 0);
                 }
             }
@@ -97,7 +96,7 @@ void editor_update(EditorState* state, World* world) {
     }
 }
 
-void editor_draw_ui(EditorState* state, World* world) {
+void editor_draw_ui(EditorState* state, World* world, Camera* camera) {
     if (!state->is_editor_mode) {
         return;
     }
@@ -137,8 +136,8 @@ void editor_draw_ui(EditorState* state, World* world) {
 
     ImGuiIO& io = ImGui::GetIO();
     if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && !io.WantCaptureMouse) {
-        float mx = io.MousePos.x + state->camera_x;
-        float my = io.MousePos.y + state->camera_y;
+        float mx = io.MousePos.x + camera->x - (GlobalSettings.screenWidth / 2.0f);
+        float my = io.MousePos.y + camera->y - (GlobalSettings.screenHeight / 2.0f);
         for (size_t i = 1; i <= world->entityCount; ++i) {
             if (world->componentsMaskList[i] & COMPONENT_POSITION) {
                 float x = world->positionList[i].x;
@@ -185,7 +184,7 @@ void editor_draw_ui(EditorState* state, World* world) {
     }
 }
 
-void editor_draw_overlay(EditorState* state, World* world, SDL_Renderer* renderer) {
+void editor_draw_overlay(EditorState* state, World* world, SDL_Renderer* renderer, Camera* camera) {
     if (!state->is_editor_mode || !state->draw_colliders_mode) {
         return;
     }
@@ -198,8 +197,8 @@ void editor_draw_overlay(EditorState* state, World* world, SDL_Renderer* rendere
                 y = world->positionList[i].y;
             }
             SDL_FRect rect;
-            rect.x = x - state->camera_x;
-            rect.y = y - state->camera_y;
+            rect.x = x - camera->x + (GlobalSettings.screenWidth / 2.0f);
+            rect.y = y - camera->y + (GlobalSettings.screenHeight / 2.0f);
             rect.w = world->colliderList[i].width;
             rect.h = world->colliderList[i].height;
             
@@ -212,12 +211,12 @@ void editor_draw_overlay(EditorState* state, World* world, SDL_Renderer* rendere
         float mouse_x, mouse_y;
         SDL_GetMouseState(&mouse_x, &mouse_y);
         
-        float world_mouse_x = mouse_x + state->camera_x;
-        float world_mouse_y = mouse_y + state->camera_y;
+        float world_mouse_x = mouse_x + camera->x - (GlobalSettings.screenWidth / 2.0f);
+        float world_mouse_y = mouse_y + camera->y - (GlobalSettings.screenHeight / 2.0f);
         
         SDL_FRect r;
-        r.x = ((state->rect_start_x < world_mouse_x) ? state->rect_start_x : world_mouse_x) - state->camera_x;
-        r.y = ((state->rect_start_y < world_mouse_y) ? state->rect_start_y : world_mouse_y) - state->camera_y;
+        r.x = ((state->rect_start_x < world_mouse_x) ? state->rect_start_x : world_mouse_x) - camera->x + (GlobalSettings.screenWidth / 2.0f);
+        r.y = ((state->rect_start_y < world_mouse_y) ? state->rect_start_y : world_mouse_y) - camera->y + (GlobalSettings.screenHeight / 2.0f);
         r.w = (state->rect_start_x < world_mouse_x) ? world_mouse_x - state->rect_start_x : state->rect_start_x - world_mouse_x;
         r.h = (state->rect_start_y < world_mouse_y) ? world_mouse_y - state->rect_start_y : state->rect_start_y - world_mouse_y;
         

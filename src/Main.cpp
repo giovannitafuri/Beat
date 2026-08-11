@@ -8,8 +8,11 @@
 #include "Event.h"
 #include "Editor.h"
 #include "RenderSystem.h"
+#include "Camera.h"
 #include "Input.h"
 #include "Systems.h"
+#include "Settings.h"
+#include "Assert.h"
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
@@ -24,20 +27,20 @@ struct EngineContext {
 
 bool engine_init(EngineContext* ctx) {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
-        fprintf(stderr, "SDL_Init Error: %s\n", SDL_GetError());
+        ASSERT(false, "SDL_Init Error");
         return false;
     }
 
-    ctx->window = SDL_CreateWindow("Beat Engine", 800, 600, 0);
+    ctx->window = SDL_CreateWindow("Beat Engine", GlobalSettings.screenWidth, GlobalSettings.screenHeight, 0);
     if (!ctx->window) {
-        fprintf(stderr, "SDL_CreateWindow Error: %s\n", SDL_GetError());
+        ASSERT(false, "SDL_CreateWindow Error");
         SDL_Quit();
         return false;
     }
 
     ctx->renderer = SDL_CreateRenderer(ctx->window, nullptr);
     if (!ctx->renderer) {
-        fprintf(stderr, "SDL_CreateRenderer Error: %s\n", SDL_GetError());
+        ASSERT(false, "SDL_CreateRenderer Error");
         SDL_DestroyWindow(ctx->window);
         SDL_Quit();
         return false;
@@ -81,6 +84,8 @@ int main(int argc, char* argv[]) {
     EditorState editor_state;
     editor_init(ctx.window, ctx.renderer, &editor_state);
 
+    Camera main_camera = {0.0f, 0.0f, 1.0f};
+
     SpatialGrid grid = { (GridCell*)calloc(64 * 64, sizeof(GridCell)), 64, 64 };
     
     Entity player = create_entity(world);
@@ -98,7 +103,7 @@ int main(int argc, char* argv[]) {
         last_time = current_time;
 
         while (SDL_PollEvent(&event)) {
-            editor_process_event(&event, &editor_state, world);
+            editor_process_event(&event, &editor_state, world, &main_camera);
             
             if (event.type == SDL_EVENT_QUIT) {
                 ctx.is_running = false;
@@ -107,7 +112,7 @@ int main(int argc, char* argv[]) {
 
         input_update();
 
-        editor_update(&editor_state, world);
+        editor_update(&editor_state, world, &main_camera);
         
         // --- Physics & Logic Update ---
         if (!editor_state.is_editor_mode) {
@@ -129,14 +134,14 @@ int main(int argc, char* argv[]) {
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
 
-        editor_draw_ui(&editor_state, world);
+        editor_draw_ui(&editor_state, world, &main_camera);
 
         SDL_SetRenderDrawColor(ctx.renderer, 30, 30, 30, 255);
         SDL_RenderClear(ctx.renderer);
 
-        render_system(world, ctx.renderer, editor_state.camera_x, editor_state.camera_y);
+        render_system(world, ctx.renderer, &main_camera);
         
-        editor_draw_overlay(&editor_state, world, ctx.renderer);
+        editor_draw_overlay(&editor_state, world, ctx.renderer, &main_camera);
 
         // Render ImGui on top of everything
         ImGui::Render();

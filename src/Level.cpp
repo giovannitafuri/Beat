@@ -1,6 +1,7 @@
 #include "Level.h"
 #include <cstdio>
 #include <cstdlib>
+#include "Assert.h"
 
 Collision CollisionsList[MAX_COLLISIONS];
 uint32_t CollisionsCount = 0;
@@ -87,20 +88,20 @@ void collision_system_grid(World *w, SpatialGrid *g) {
 bool load_level(const char* filepath, SpatialGrid* grid) {
     FILE* file = fopen(filepath, "r");
     if (!file) {
-        fprintf(stderr, "Error: Could not open level file %s\n", filepath);
+        ASSERT(false, "Error: Could not open level file");
         return false;
     }
 
     char title[256] = {0};
     if (fscanf(file, "TITLE: \"%255[^\"]\"\n", title) != 1) {
-        fprintf(stderr, "Error: Expected TITLE in %s\n", filepath);
+        ASSERT(false, "Error: Expected TITLE in level file");
         fclose(file);
         return false;
     }
 
     uint32_t width = 0, height = 0;
     if (fscanf(file, "WIDTH: %u HEIGHT: %u\n", &width, &height) != 2) {
-        fprintf(stderr, "Error: Expected WIDTH and HEIGHT in %s\n", filepath);
+        ASSERT(false, "Error: Expected WIDTH and HEIGHT in level file");
         fclose(file);
         return false;
     }
@@ -112,7 +113,7 @@ bool load_level(const char* filepath, SpatialGrid* grid) {
     grid->cells = (GridCell*)calloc(width * height, sizeof(GridCell));
 
     if (!grid->cells) {
-        fprintf(stderr, "Error: Failed to allocate grid cells\n");
+        ASSERT(false, "Error: Failed to allocate grid cells");
         return false;
     }
 
