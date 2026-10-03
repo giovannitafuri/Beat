@@ -1,15 +1,13 @@
 #ifndef LEVEL_H
 #define LEVEL_H
 
-
-
 #include "Entity.h"
-
+#include <cstdio>
 
 constexpr float CELL_SIZE = 64.0f;
 constexpr uint32_t MAX_ENTITY_PER_CELL = 16;
 
-// THINK: should i save time?
+// THINK: should i save time os simpli print it in debug?
 struct Collision {
     Entity e1;
     Entity e2;

@@ -120,12 +120,7 @@ int main(int argc, char* argv[]) {
             
             grid_rebuild(&grid, world);
             collision_system_grid(world, &grid);
-            
-            for (uint32_t i = 0; i < CollisionsCount; i++) {
-                // Collision c = CollisionsList[i];
-                // TODO: Handle entity specific resolution (e.g. wall sliding, damage)
-            }
-            
+            resolve_collision_system(world);
             collisions_list_clear();
         }
 

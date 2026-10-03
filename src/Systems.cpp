@@ -25,3 +25,48 @@ void movement_system(World *w) {
         }
     }
 }
+
+void resolve_collision_system(World *w) {
+    for (uint32_t i = 0; i < CollisionsCount; i++) {
+        Collision current_coll = CollisionsList[i];
+        uint64_t id1 = current_coll.e1.id;
+        uint64_t id2 = current_coll.e2.id;
+
+        Position e1pos = w->positionList[id1];
+        Collider e1collider = w->colliderList[id1];
+        Position e2pos = w->positionList[id2];
+        Collider e2collider = w->colliderList[id2];
+
+        float overlap_x = 0.0f;
+        float direction_x = 0.0f;
+        if (e1pos.x < e2pos.x) {
+            overlap_x = (e1pos.x + e1collider.width) - e2pos.x;
+            direction_x = -1.0f;
+        } else {
+            overlap_x = (e2pos.x + e2collider.width) - e1pos.x;
+            direction_x = 1.0f;
+        }
+
+        float overlap_y = 0.0f;
+        float direction_y = 0.0f;
+        if (e1pos.y < e2pos.y) {
+            overlap_y = (e1pos.y + e1collider.height) - e2pos.y;
+            direction_y = -1.0f;
+        } else {
+            overlap_y = (e2pos.y + e2collider.height) - e1pos.y;
+            direction_y = 1.0f;
+        }
+
+        if (overlap_x <= overlap_y) {
+            w->positionList[id1].x += overlap_x * direction_x;
+            if (w->componentsMaskList[id1] & COMPONENT_VELOCITY) {
+                w->velocityList[id1].vx = 0.0f;
+            }
+        } else {
+            w->positionList[id1].y += overlap_y * direction_y;
+            if (w->componentsMaskList[id1] & COMPONENT_VELOCITY) {
+                w->velocityList[id1].vy = 0.0f;
+            }
+        }
+    }
+}
