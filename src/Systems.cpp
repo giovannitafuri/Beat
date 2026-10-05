@@ -3,9 +3,7 @@
 #include "BeatTime.h"
 
 void movement_system(World *w) {
-    if (w->entityCount == (size_t)-1) return;
-
-    for (size_t id = 0; id <= w->entityCount; id++) {
+    for (size_t id = 1; id <= w->entityCount; id++) {
         uint64_t mask = w->componentsMaskList[id];
         
         if (mask & COMPONENT_PLAYER) {
@@ -57,15 +55,32 @@ void resolve_collision_system(World *w) {
             direction_y = 1.0f;
         }
 
-        if (overlap_x <= overlap_y) {
-            w->positionList[id1].x += overlap_x * direction_x;
-            if (w->componentsMaskList[id1] & COMPONENT_VELOCITY) {
+        bool e1_dynamic = (w->componentsMaskList[id1] & COMPONENT_VELOCITY) != 0;
+        bool e2_dynamic = (w->componentsMaskList[id2] & COMPONENT_VELOCITY) != 0;
+
+        if (e1_dynamic && !e2_dynamic) {
+            if (overlap_x <= overlap_y) {
+                w->positionList[id1].x += overlap_x * direction_x;
                 w->velocityList[id1].vx = 0.0f;
+            } else {
+                w->positionList[id1].y += overlap_y * direction_y;
+                w->velocityList[id1].vy = 0.0f;
+            }
+        } else if (!e1_dynamic && e2_dynamic) {
+            if (overlap_x <= overlap_y) {
+                w->positionList[id2].x -= overlap_x * direction_x;
+                w->velocityList[id2].vx = 0.0f;
+            } else {
+                w->positionList[id2].y -= overlap_y * direction_y;
+                w->velocityList[id2].vy = 0.0f;
             }
         } else {
-            w->positionList[id1].y += overlap_y * direction_y;
-            if (w->componentsMaskList[id1] & COMPONENT_VELOCITY) {
-                w->velocityList[id1].vy = 0.0f;
+            if (overlap_x <= overlap_y) {
+                w->positionList[id1].x += overlap_x * direction_x;
+                if (e1_dynamic) w->velocityList[id1].vx = 0.0f;
+            } else {
+                w->positionList[id1].y += overlap_y * direction_y;
+                if (e1_dynamic) w->velocityList[id1].vy = 0.0f;
             }
         }
     }

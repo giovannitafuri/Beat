@@ -86,12 +86,11 @@ int main(int argc, char* argv[]) {
 
     Camera main_camera = {0.0f, 0.0f, 1.0f};
 
-    SpatialGrid grid = { (GridCell*)calloc(64 * 64, sizeof(GridCell)), 64, 64 };
-    
     Entity player = create_entity(world);
     add_position_component(world, player.id, 400.0f, 300.0f);
     world->componentsMaskList[player.id] |= COMPONENT_PLAYER;
     add_velocity_component(world, player.id, 0.0f, 0.0f);
+    add_collider_component(world, player.id, 32.0f, 32.0f);
 
     uint64_t last_time = SDL_GetPerformanceCounter();
     uint64_t freq = SDL_GetPerformanceFrequency();
@@ -118,9 +117,9 @@ int main(int argc, char* argv[]) {
         if (!editor_state.is_editor_mode) {
             movement_system(world);
             
-            grid_rebuild(&grid, world);
-            collision_system_grid(world, &grid);
+            collision_system(world);
             resolve_collision_system(world);
+            camera_movement(world, &main_camera);
             collisions_list_clear();
         }
 
@@ -149,7 +148,6 @@ int main(int argc, char* argv[]) {
     }
 
     world_free(world);
-    free(grid.cells);
 
     editor_shutdown();
     Assets::shutdown();
