@@ -9,11 +9,9 @@ World *world_init() {
     if (!new_world) return nullptr;
 
     new_world->capacity = START_ENTITY_NUM; 
-    // In C/C++, underflow/overflow of unsigned types (like size_t) is guaranteed by the standard.
-    // Assigning -1 to an unsigned type wraps it around to its maximum value (e.g. SIZE_MAX).
-    // This way, the first create_entity() call will do entityCount++, which through guaranteed 
-    // overflow will wrap it exactly back to 0.
-    new_world->entityCount = -1;
+    // Entity ID 0 is reserved as the sentinel (NULL_ENTITY / no selection).
+    // Initializing entityCount to 0 ensures the first created entity receives ID 1.
+    new_world->entityCount = 0;
 
     new_world->componentsMaskList = (uint64_t*)calloc(START_ENTITY_NUM, sizeof(uint64_t));
     new_world->positionList       = (Position*)malloc(sizeof(Position) * START_ENTITY_NUM);
@@ -115,7 +113,7 @@ void add_velocity_component(World *w, uint32_t e, float vx, float vy) {
 }
 
 void world_clear(World *w) {
-    w->entityCount = -1;
+    w->entityCount = 0;
     for (size_t i = 0; i < w->capacity; i++) {
         w->componentsMaskList[i] = 0;
         w->status[i] = 0;

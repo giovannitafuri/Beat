@@ -29,5 +29,28 @@ void render_system(World* world, SDL_Renderer* renderer, Camera* camera) {
                 SDL_RenderTexture(renderer, a->texture, &src, &dst);
             }
         }
+
+        if (world->componentsMaskList[i] & COMPONENT_PLAYER) {
+            float x = 0, y = 0;
+            float w = 32.0f, h = 32.0f;
+            if (world->componentsMaskList[i] & COMPONENT_POSITION) {
+                x = world->positionList[i].x;
+                y = world->positionList[i].y;
+            }
+            if (world->componentsMaskList[i] & COMPONENT_COLLIDER) {
+                w = world->colliderList[i].width;
+                h = world->colliderList[i].height;
+            }
+
+            SDL_FRect dst;
+            dst.x = x - camera->x + (GlobalSettings.screenWidth / 2.0f);
+            dst.y = y - camera->y + (GlobalSettings.screenHeight / 2.0f);
+            dst.w = w;
+            dst.h = h;
+
+            // Draw player as a cyan/blue rectangle
+            SDL_SetRenderDrawColor(renderer, 0, 200, 255, 255);
+            SDL_RenderFillRect(renderer, &dst);
+        }
     }
 }
