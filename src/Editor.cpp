@@ -180,6 +180,10 @@ void editor_draw_ui(EditorState* state, World* world, Camera* camera) {
                 add_collider_component(world, state->selected_entity_id, w, h);
             }
         }
+        if (ImGui::MenuItem("Delete Entity")) {
+            delete_entity(world, get_entity(world, state->selected_entity_id));
+            state->selected_entity_id = 0;
+        }
         ImGui::EndPopup();
     }
 }

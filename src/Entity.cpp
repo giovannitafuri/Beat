@@ -1,7 +1,19 @@
 #include "Entity.h"
+#include <cstdint>
 #include <cstdlib>
 #include <cstdio>
 #include "Assert.h"
+
+static uint64_t free_list_pop(World *w) {
+    if (w->freeListCount > 0) {
+        return w->freeList[--w->freeListCount];
+    }
+    return 0;
+}
+
+static void free_list_add(World *w, uint64_t id) {
+    w->freeList[w->freeListCount++] = id;
+}
 
 World *world_init() {
     World *new_world = (World*)malloc(sizeof(World));
@@ -12,6 +24,7 @@ World *world_init() {
     // Entity ID 0 is reserved as the sentinel (NULL_ENTITY / no selection).
     // Initializing entityCount to 0 ensures the first created entity receives ID 1.
     new_world->entityCount = 0;
+    new_world->freeListCount = 0;
 
     new_world->componentsMaskList = (uint64_t*)calloc(START_ENTITY_NUM, sizeof(uint64_t));
     new_world->positionList       = (Position*)malloc(sizeof(Position) * START_ENTITY_NUM);
@@ -19,14 +32,16 @@ World *world_init() {
     new_world->colliderList       = (Collider*)malloc(sizeof(Collider) * START_ENTITY_NUM);
     new_world->spriteList         = (Sprite*)malloc(sizeof(Sprite) * START_ENTITY_NUM);
     new_world->velocityList       = (Velocity*)malloc(sizeof(Velocity) * START_ENTITY_NUM);
+    new_world->freeList           = (size_t*)malloc(sizeof(size_t) * START_ENTITY_NUM);
     
-    if (!new_world->componentsMaskList || !new_world->positionList || !new_world->status || !new_world->colliderList || !new_world->spriteList || !new_world->velocityList) {
+    if (!new_world->componentsMaskList || !new_world->positionList || !new_world->status || !new_world->colliderList || !new_world->spriteList || !new_world->velocityList || !new_world->freeList) {
         free(new_world->componentsMaskList);
         free(new_world->positionList);
         free(new_world->status);
         free(new_world->colliderList);
         free(new_world->spriteList);
         free(new_world->velocityList);
+        free(new_world->freeList);
         free(new_world);
         ASSERT(false, "Failed to allocate World component arrays");
         return nullptr;
@@ -38,14 +53,15 @@ World *world_init() {
 bool world_resize(World *w) {
     size_t new_capacity = w->capacity * 2;
 
-    uint64_t *new_mask     = (uint64_t*)realloc(w->componentsMaskList, sizeof(uint64_t) * new_capacity);
-    Position *new_pos      = (Position*)realloc(w->positionList, sizeof(Position) * new_capacity);
-    uint32_t *new_status   = (uint32_t*)realloc(w->status, sizeof(uint32_t) * new_capacity);
-    Collider *new_collider = (Collider*)realloc(w->colliderList, sizeof(Collider) * new_capacity);
-    Sprite   *new_sprite   = (Sprite*)realloc(w->spriteList, sizeof(Sprite) * new_capacity);
-    Velocity *new_velocity = (Velocity*)realloc(w->velocityList, sizeof(Velocity) * new_capacity);
+    uint64_t *new_mask      = (uint64_t*)realloc(w->componentsMaskList, sizeof(uint64_t) * new_capacity);
+    Position *new_pos       = (Position*)realloc(w->positionList, sizeof(Position) * new_capacity);
+    uint32_t *new_status    = (uint32_t*)realloc(w->status, sizeof(uint32_t) * new_capacity);
+    Collider *new_collider  = (Collider*)realloc(w->colliderList, sizeof(Collider) * new_capacity);
+    Sprite   *new_sprite    = (Sprite*)realloc(w->spriteList, sizeof(Sprite) * new_capacity);
+    Velocity *new_velocity  = (Velocity*)realloc(w->velocityList, sizeof(Velocity) * new_capacity);
+    size_t   *new_free_list = (size_t*)realloc(w->freeList, sizeof(size_t) * new_capacity);
 
-    if (!new_mask || !new_pos || !new_status || !new_collider || !new_sprite || !new_velocity) {
+    if (!new_mask || !new_pos || !new_status || !new_collider || !new_sprite || !new_velocity || !new_free_list) {
         // I don't free the new reallocated arrays because if realloc fails
         // on these small arrays, the OS is out of memory and we are going to crash anyway.
         ASSERT(false, "Failed to reallocate World arrays");
@@ -58,6 +74,7 @@ bool world_resize(World *w) {
     w->colliderList = new_collider;
     w->spriteList = new_sprite;
     w->velocityList = new_velocity;
+    w->freeList = new_free_list;
     
     // realloc doesn't zero-initialize the new memory. We only really need to zero the mask.
     for (size_t i = w->capacity; i < new_capacity; i++) {
@@ -75,6 +92,11 @@ Entity get_entity(World *w, uint64_t id) {
 }
 
 Entity create_entity(World *w) {
+    uint64_t id = free_list_pop(w);
+    if (id != 0) {
+        Entity new_entity = { id, w->status[id] };
+        return new_entity;
+    }
     if (w->entityCount + 1 >= w->capacity) {
         bool resized = world_resize(w);
         ASSERT(resized, "Error resizing world!");
@@ -86,6 +108,15 @@ Entity create_entity(World *w) {
     w->entityCount++;
     Entity new_entity = { w->entityCount, w->status[w->entityCount] };
     return new_entity;
+}
+/* the compenents remain in their respective lists for performance
+ * status and components are set as 0 (INDICATOR OF FREE)
+ * the id is set in a free list entity;
+*/
+void delete_entity(World* w, Entity e) {
+    w->componentsMaskList[e.id] = 0;
+    w->status[e.id]++;
+    free_list_add(w, e.id);
 }
     
 void add_position_component(World *w, uint32_t e, float x, float y) {
@@ -114,6 +145,7 @@ void add_velocity_component(World *w, uint32_t e, float vx, float vy) {
 
 void world_clear(World *w) {
     w->entityCount = 0;
+    w->freeListCount = 0;
     for (size_t i = 0; i < w->capacity; i++) {
         w->componentsMaskList[i] = 0;
         w->status[i] = 0;
@@ -128,5 +160,6 @@ void world_free(World *w) {
     free(w->spriteList);
     free(w->velocityList);
     free(w->status);
+    free(w->freeList);
     free(w);
 }
