@@ -6,33 +6,13 @@
 
 // ============================================================================
 // BeatMap<Value>
+// Open-addressing hash map using Robin Hood hashing and backward-shift deletion.
 //
-// Open-addressing hash map using Robin Hood hashing, keyed by C strings.
-//
-// - Keys are hashed internally to a 64-bit integer (FNV-1a + a splitmix64
-//   style finalizer). That 64-bit hash IS the identity used for lookups:
-//   the original string is never stored or compared again. This means two
-//   different strings that happen to hash to the same value would be
-//   treated as the same key. With a 64-bit hash this risk is negligible
-//   for typical engine use (asset names, tags, event ids), but it is a
-//   conscious trade-off, not a guarantee of correctness against adversarial
-//   input.
-//
-// - Value should stay lightweight (a handle, an index, a raw pointer, an
-//   integer...). Robin Hood hashing physically moves entries between slots
-//   during insert (stealing a slot from a "richer" entry) and during
-//   remove (backward-shift of the following cluster), so Value is copied
-//   around frequently. Heavy owned data does not belong here directly;
-//   store a handle/index into a separate pool instead.
-//
-// - No tombstones on delete: removal uses backward-shift deletion, so
-//   probe sequences never degrade the way they do with tombstone-based
-//   linear probing.
-//
-// - No STL dependency: storage is a raw Item[] managed with new[]/delete[].
-//   Copying a BeatMap is disabled (see deleted copy ctor/assignment) since
-//   a shallow copy of the raw pointer would lead to double-free.
+// Key:   64-bit FNV-1a hash of C-string (hash-as-identity, no string storage).
+// Value: Trivially copyable handles, indices, or pointers.
+// Alloc: Zero STL dependencies. Flat dynamic array (power-of-two capacity).
 // ============================================================================
+
 
 constexpr float LOAD_FACTOR = 0.85f;
 
@@ -191,10 +171,7 @@ private:
         return ((float)(count + 1) / (float)capacity) >= LOAD_FACTOR;
     }
 
-    // A resize can't just copy the old array into a bigger one: each
-    // entry's target slot depends on 'mask' (= capacity - 1), so a bigger
-    // capacity means (almost) every entry needs a different index. Every
-    // live entry has to be reinserted from scratch.
+    // Rehash and reinsert all active entries into the new table.
     void resize() {
         Item*  old_data     = data;
         size_t old_capacity = capacity;
@@ -213,9 +190,7 @@ private:
         delete[] old_data;
     }
 
-    // Used only by resize(): the hash and value are already known (the
-    // original string is gone), so this skips hash_string() entirely and
-    // just runs the Robin Hood placement logic.
+    // Direct placement by precomputed hash (used during table resize).
     void raw_insert(uint64_t hash, Value val) {
         uint64_t idx  = mix(hash) & mask;
         uint32_t dist = 0;

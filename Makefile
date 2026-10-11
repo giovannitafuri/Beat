@@ -9,7 +9,7 @@ BIN_DIR     := $(BUILD_DIR)/bin
 # ==== Compiler and flags ====
 CXX      := g++
 IMGUI_DIR := imgui-1.92.9b
-CXXFLAGS := -std=c++17 -I$(INC_DIR) -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -Iexternal/lsmath
+CXXFLAGS := -std=c++23 -fno-exceptions -fno-rtti -I$(INC_DIR) -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -Iexternal/lsmath
 LDFLAGS  :=
 
 # Extended warnings, always on: help catch bugs at compile time
