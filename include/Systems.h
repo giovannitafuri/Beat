@@ -8,7 +8,7 @@
 
 void movement_system(World *w);
 inline void camera_system(Camera *c, World *w, Entity *e) {
-    // For now i don't check if e->status == w->status because if player dies the game stops
+    // Player status check skipped: the game stops when the player dies.
     Position p = w->positionList[e->id];
     c->x = p.x;
     c->y = p.y;

@@ -62,8 +62,7 @@ bool world_resize(World *w) {
     size_t   *new_free_list = (size_t*)realloc(w->freeList, sizeof(size_t) * new_capacity);
 
     if (!new_mask || !new_pos || !new_status || !new_collider || !new_sprite || !new_velocity || !new_free_list) {
-        // I don't free the new reallocated arrays because if realloc fails
-        // on these small arrays, the OS is out of memory and we are going to crash anyway.
+        // If realloc fails, the system is out of memory and we crash anyway.
         ASSERT(false, "Failed to reallocate World arrays");
         return false;
     }
@@ -101,18 +100,15 @@ Entity create_entity(World *w) {
         bool resized = world_resize(w);
         ASSERT(resized, "Error resizing world!");
         if (!resized) {
-            // Keep going, although we might crash soon if we exceed capacity.
-            // Ideally we'd return a null entity here, but for now we just log an assert.
+            // If resize failed, report error and try to continue.
         }
     }
     w->entityCount++;
     Entity new_entity = { w->entityCount, w->status[w->entityCount] };
     return new_entity;
 }
-/* the compenents remain in their respective lists for performance
- * status and components are set as 0 (INDICATOR OF FREE)
- * the id is set in a free list entity;
-*/
+
+// Mark entity as inactive and add its ID to the free list for reuse.
 void delete_entity(World* w, Entity e) {
     w->componentsMaskList[e.id] = 0;
     w->status[e.id]++;

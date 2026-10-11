@@ -96,10 +96,7 @@ public:
         }
     }
 
-    // Convenience variant: returns a pointer into the slot, or nullptr.
-    // WARNING: only valid until the next insert/remove/resize on this map,
-    // since Robin Hood moves entries between slots. Use immediately, do not
-    // hold onto it across other map operations.
+    // Returns pointer to value, or nullptr (invalidated on map resize/insert).
     Value *find(const char *key) {
         uint64_t h   = hash_string(key);
         size_t   idx = mix(h) & mask;
