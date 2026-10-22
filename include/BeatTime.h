@@ -3,6 +3,7 @@
 
 namespace Time {
     extern float Delta;
+    extern float Alpha;
 }
 
 #endif // BEAT_TIME_H

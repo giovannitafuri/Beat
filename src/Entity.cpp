@@ -28,15 +28,17 @@ World *world_init() {
 
     new_world->componentsMaskList = (uint64_t*)calloc(START_ENTITY_NUM, sizeof(uint64_t));
     new_world->positionList       = (Position*)malloc(sizeof(Position) * START_ENTITY_NUM);
+    new_world->prevPositionList       = (Position*)malloc(sizeof(Position) * START_ENTITY_NUM);
     new_world->status             = (uint32_t*)malloc(sizeof(uint32_t) * START_ENTITY_NUM);
     new_world->colliderList       = (Collider*)malloc(sizeof(Collider) * START_ENTITY_NUM);
     new_world->spriteList         = (Sprite*)malloc(sizeof(Sprite) * START_ENTITY_NUM);
     new_world->velocityList       = (Velocity*)malloc(sizeof(Velocity) * START_ENTITY_NUM);
     new_world->freeList           = (size_t*)malloc(sizeof(size_t) * START_ENTITY_NUM);
     
-    if (!new_world->componentsMaskList || !new_world->positionList || !new_world->status || !new_world->colliderList || !new_world->spriteList || !new_world->velocityList || !new_world->freeList) {
+    if (!new_world->componentsMaskList || !new_world->positionList || !new_world->prevPositionList || !new_world->status || !new_world->colliderList || !new_world->spriteList || !new_world->velocityList || !new_world->freeList) {
         free(new_world->componentsMaskList);
         free(new_world->positionList);
+        free(new_world->prevPositionList);
         free(new_world->status);
         free(new_world->colliderList);
         free(new_world->spriteList);
@@ -55,13 +57,14 @@ bool world_resize(World *w) {
 
     uint64_t *new_mask      = (uint64_t*)realloc(w->componentsMaskList, sizeof(uint64_t) * new_capacity);
     Position *new_pos       = (Position*)realloc(w->positionList, sizeof(Position) * new_capacity);
+    Position *new_prev_pos  = (Position*)realloc(w->prevPositionList, sizeof(Position) * new_capacity);
     uint32_t *new_status    = (uint32_t*)realloc(w->status, sizeof(uint32_t) * new_capacity);
     Collider *new_collider  = (Collider*)realloc(w->colliderList, sizeof(Collider) * new_capacity);
     Sprite   *new_sprite    = (Sprite*)realloc(w->spriteList, sizeof(Sprite) * new_capacity);
     Velocity *new_velocity  = (Velocity*)realloc(w->velocityList, sizeof(Velocity) * new_capacity);
     size_t   *new_free_list = (size_t*)realloc(w->freeList, sizeof(size_t) * new_capacity);
 
-    if (!new_mask || !new_pos || !new_status || !new_collider || !new_sprite || !new_velocity || !new_free_list) {
+    if (!new_mask || !new_pos || !new_prev_pos || !new_status || !new_collider || !new_sprite || !new_velocity || !new_free_list) {
         // If realloc fails, the system is out of memory and we crash anyway.
         ASSERT(false, "Failed to reallocate World arrays");
         return false;
@@ -69,6 +72,7 @@ bool world_resize(World *w) {
 
     w->componentsMaskList = new_mask;
     w->positionList = new_pos;
+    w->prevPositionList = new_prev_pos;
     w->status = new_status;
     w->colliderList = new_collider;
     w->spriteList = new_sprite;
@@ -116,9 +120,15 @@ void delete_entity(World* w, Entity e) {
 }
     
 void add_position_component(World *w, uint32_t e, float x, float y) {
-    Position new_pos = {x, y};
+    Position new_pos = {{x, y}};
     w->componentsMaskList[e] |= COMPONENT_POSITION; 
     w->positionList[e] = new_pos;
+}
+
+void add_prev_position_component(World *w, uint32_t e, float x, float y) {
+    Position new_pos = {{x, y}};
+    w->componentsMaskList[e] |= COMPONENT_PREV_POSITION;
+    w->prevPositionList[e] = new_pos;
 }
 
 void add_collider_component(World *w, uint32_t e, float width, float height) {
@@ -134,7 +144,7 @@ void add_sprite_component(World *w, uint32_t e, const char* atlas_name, uint64_t
 }
 
 void add_velocity_component(World *w, uint32_t e, float vx, float vy) {
-    Velocity new_vel = {vx, vy};
+    Velocity new_vel = {{vx, vy}};
     w->componentsMaskList[e] |= COMPONENT_VELOCITY;
     w->velocityList[e] = new_vel;
 }
@@ -152,6 +162,7 @@ void world_free(World *w) {
     if (!w) return;
     free(w->componentsMaskList);
     free(w->positionList);
+    free(w->prevPositionList);
     free(w->colliderList);
     free(w->spriteList);
     free(w->velocityList);

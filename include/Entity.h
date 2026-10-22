@@ -21,6 +21,7 @@ struct World {
     uint32_t    *status;
     uint64_t    *componentsMaskList;
     Position    *positionList;
+    Position    *prevPositionList;
     Collider    *colliderList;
     Sprite      *spriteList;
     Velocity    *velocityList;
@@ -32,6 +33,7 @@ Entity get_entity(World *w, uint64_t id);
 Entity create_entity(World *w);
 void delete_entity(World *w, Entity e);
 void add_position_component(World *w, uint32_t e, float x, float y);
+void add_prev_position_component(World *w, uint32_t e, float x, float y);
 void add_collider_component(World *w, uint32_t e, float width, float height);
 void add_sprite_component(World *w, uint32_t e, const char* atlas_name, uint64_t frame_index);
 void add_velocity_component(World *w, uint32_t e, float vx, float vy);

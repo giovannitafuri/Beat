@@ -9,7 +9,8 @@
 void movement_system(World *w);
 inline void camera_system(Camera *c, World *w, Entity *e) {
     // Player status check skipped: the game stops when the player dies.
-    Position p = w->positionList[e->id];
+    LSMVECTOR p;
+    LSMLoadVector(&w->positionList[e->id], 2, &p);
     c->x = p.x;
     c->y = p.y;
 }

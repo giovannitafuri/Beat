@@ -1,14 +1,23 @@
 #include "RenderSystem.h"
 #include "Assets.h"
 #include "Settings.h"
+#include "BeatTime.h"
+#include "LSMath.h"
 
 void render_system(World* world, SDL_Renderer* renderer, Camera* camera) {
     for (size_t i = 1; i <= world->entityCount; ++i) {
         if (world->componentsMaskList[i] & COMPONENT_SPRITE) {
             float x = 0, y = 0;
             if (world->componentsMaskList[i] & COMPONENT_POSITION) {
-                x = world->positionList[i].x;
-                y = world->positionList[i].y;
+                LSMVECTOR pos;
+                LSMLoadVector(&world->positionList[i], 2, &pos);
+                if (world->componentsMaskList[i] & COMPONENT_PREV_POSITION) {
+                    LSMVECTOR prev_pos;
+                    LSMLoadVector(&world->prevPositionList[i], 2, &prev_pos);
+                    pos = prev_pos * (1.0f - Time::Alpha) + pos * Time::Alpha;
+                }
+                x = pos.x;
+                y = pos.y;
             }
             
             Sprite& spr = world->spriteList[i];
@@ -34,8 +43,15 @@ void render_system(World* world, SDL_Renderer* renderer, Camera* camera) {
             float x = 0, y = 0;
             float w = 32.0f, h = 32.0f;
             if (world->componentsMaskList[i] & COMPONENT_POSITION) {
-                x = world->positionList[i].x;
-                y = world->positionList[i].y;
+                LSMVECTOR pos;
+                LSMLoadVector(&world->positionList[i], 2, &pos);
+                if (world->componentsMaskList[i] & COMPONENT_PREV_POSITION) {
+                    LSMVECTOR prev_pos;
+                    LSMLoadVector(&world->prevPositionList[i], 2, &prev_pos);
+                    pos = prev_pos * (1.0f - Time::Alpha) + pos * Time::Alpha;
+                }
+                x = pos.x;
+                y = pos.y;
             }
             if (world->componentsMaskList[i] & COMPONENT_COLLIDER) {
                 w = world->colliderList[i].width;

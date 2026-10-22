@@ -140,8 +140,10 @@ void editor_draw_ui(EditorState* state, World* world, Camera* camera) {
         float my = io.MousePos.y + camera->y - (GlobalSettings.screenHeight / 2.0f);
         for (size_t i = 1; i <= world->entityCount; ++i) {
             if (world->componentsMaskList[i] & COMPONENT_POSITION) {
-                float x = world->positionList[i].x;
-                float y = world->positionList[i].y;
+                LSMVECTOR pos;
+                LSMLoadVector(&world->positionList[i], 2, &pos);
+                float x = pos.x;
+                float y = pos.y;
                 float w = 32, h = 32;
                 
                 if (world->componentsMaskList[i] & COMPONENT_SPRITE) {
@@ -197,8 +199,10 @@ void editor_draw_overlay(EditorState* state, World* world, SDL_Renderer* rendere
         if (world->componentsMaskList[i] & COMPONENT_COLLIDER) {
             float x = 0, y = 0;
             if (world->componentsMaskList[i] & COMPONENT_POSITION) {
-                x = world->positionList[i].x;
-                y = world->positionList[i].y;
+                LSMVECTOR pos;
+                LSMLoadVector(&world->positionList[i], 2, &pos);
+                x = pos.x;
+                y = pos.y;
             }
             SDL_FRect rect;
             rect.x = x - camera->x + (GlobalSettings.screenWidth / 2.0f);

@@ -85,8 +85,7 @@ rebuild:
 
 # Static code analysis
 check:
-	cppcheck --enable=all --inconclusive --std=c++17 -I$(INC_DIR) $(SRC_DIR)
-
+	scan-build make
 clean:
 	rm -rf $(BUILD_DIR)
 	@echo "==> Clean complete"

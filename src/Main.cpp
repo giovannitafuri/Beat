@@ -1,6 +1,4 @@
 #include <SDL3/SDL.h>
-#include <cstdio>
-#include <cstdlib>
 #include "Entity.h"
 #include "BeatTime.h"
 #include "Assets.h"
@@ -18,6 +16,7 @@
 #include "imgui_impl_sdlrenderer3.h"
 
 float Time::Delta = 0.0f;
+float Time::Alpha = 0.0f;
 
 struct EngineContext {
     SDL_Window* window;
@@ -88,22 +87,28 @@ int main(int argc, char* argv[]) {
 
     Entity player = create_entity(world);
     add_position_component(world, player.id, 400.0f, 300.0f);
+    add_prev_position_component(world, player.id, 400.0f, 300.0f);
     world->componentsMaskList[player.id] |= COMPONENT_PLAYER;
     add_velocity_component(world, player.id, 0.0f, 0.0f);
     add_collider_component(world, player.id, 32.0f, 32.0f);
 
+    float dt = 1.0f / 60.0f;
+    float accomulator = 0;
     uint64_t last_time = SDL_GetPerformanceCounter();
     uint64_t freq = SDL_GetPerformanceFrequency();
 
     SDL_Event event;
     while (ctx.is_running) {
         uint64_t current_time = SDL_GetPerformanceCounter();
-        Time::Delta = (float)((double)(current_time - last_time) / (double)freq);
-        last_time = current_time;
+        float frame_time = (float)((double)(current_time - last_time) / (double)freq);
+        if (frame_time > 0.25f) {
+            frame_time = 0.25f;
+        }
+        accomulator += frame_time;
 
         while (SDL_PollEvent(&event)) {
             editor_process_event(&event, &editor_state, world, &main_camera);
-            
+
             if (event.type == SDL_EVENT_QUIT) {
                 ctx.is_running = false;
             }
@@ -112,16 +117,23 @@ int main(int argc, char* argv[]) {
         input_update();
 
         editor_update(&editor_state, world, &main_camera);
-        
-        // --- Physics & Logic Update ---
-        if (!editor_state.is_editor_mode) {
-            movement_system(world);
-            
-            collision_system(world);
-            resolve_collision_system(world);
-            camera_movement(world, &main_camera);
-            collisions_list_clear();
+
+        while (accomulator >= dt) {
+            // Fix Your Timestep
+            accomulator -= dt;
+            Time::Delta = dt;
+            // --- Physics & Logic Update ---
+            if (!editor_state.is_editor_mode) {
+                movement_system(world);
+
+                collision_system(world);
+                resolve_collision_system(world);
+                camera_movement(world, &main_camera);
+                collisions_list_clear();
+            }
         }
+        Time::Alpha = accomulator / dt;
+        last_time = current_time;
 
         // --- Render ---
         ImGui_ImplSDLRenderer3_NewFrame();
@@ -134,15 +146,15 @@ int main(int argc, char* argv[]) {
         SDL_RenderClear(ctx.renderer);
 
         render_system(world, ctx.renderer, &main_camera);
-        
+
         editor_draw_overlay(&editor_state, world, ctx.renderer, &main_camera);
 
         // Render ImGui on top of everything
         ImGui::Render();
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), ctx.renderer);
-        
+
         SDL_RenderPresent(ctx.renderer);
-        
+
         // --- End of Frame ---
         events_machine_clear();
     }
