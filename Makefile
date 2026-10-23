@@ -8,7 +8,7 @@ BIN_DIR     := $(BUILD_DIR)/bin
 
 # ==== Compiler and flags ====
 CXX      := g++
-IMGUI_DIR := imgui-1.92.9b
+IMGUI_DIR := external/imgui
 CXXFLAGS := -std=c++23 -fno-exceptions -fno-rtti -I$(INC_DIR) -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -Iexternal/lsmath
 LDFLAGS  :=
 
@@ -19,7 +19,7 @@ CXXFLAGS += -Wall -Wextra -Wpedantic -Wshadow \
             -Wundef
 
 # Libraries via pkg-config (add/remove as needed)
-PKGS     := sdl3 sdl3-image sdl3-ttf sdl3-mixer
+PKGS     := sdl3 sdl3-image
 CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
 LDFLAGS  += $(shell pkg-config --libs $(PKGS))
 
