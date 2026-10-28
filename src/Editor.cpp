@@ -148,7 +148,7 @@ void editor_draw_ui(EditorState* state, World* world, Camera* camera) {
                 
                 if (world->componentsMaskList[i] & COMPONENT_SPRITE) {
                     Sprite& spr = world->spriteList[i];
-                    Assets::Atlas* a = Assets::Atlases.find(spr.atlas_name);
+                    Assets::Atlas* a = spr.atlas;
                     if (a) { w = a->sprite_width; h = a->sprite_height; }
                 }
                 if (world->componentsMaskList[i] & COMPONENT_COLLIDER) {
@@ -176,7 +176,7 @@ void editor_draw_ui(EditorState* state, World* world, Camera* camera) {
                 float w = 32, h = 32;
                 if (world->componentsMaskList[state->selected_entity_id] & COMPONENT_SPRITE) {
                     Sprite& spr = world->spriteList[state->selected_entity_id];
-                    Assets::Atlas* a = Assets::Atlases.find(spr.atlas_name);
+                    Assets::Atlas* a = spr.atlas;
                     if (a) { w = a->sprite_width; h = a->sprite_height; }
                 }
                 add_collider_component(world, state->selected_entity_id, w, h);

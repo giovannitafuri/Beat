@@ -1,4 +1,5 @@
 #include "Entity.h"
+#include "Assets.h"
 #include <cstdint>
 #include <cstdlib>
 #include <cstdio>
@@ -137,10 +138,15 @@ void add_collider_component(World *w, uint32_t e, float width, float height) {
     w->colliderList[e] = new_col;
 }
 
-void add_sprite_component(World *w, uint32_t e, const char* atlas_name, uint64_t frame_index) {
-    Sprite new_spr = {atlas_name, frame_index};
+void add_sprite_component(World *w, uint32_t e, Assets::Atlas* atlas, uint32_t frame_index) {
+    Sprite new_spr = {atlas, frame_index};
     w->componentsMaskList[e] |= COMPONENT_SPRITE;
     w->spriteList[e] = new_spr;
+}
+
+void add_sprite_component(World *w, uint32_t e, const char* atlas_name, uint32_t frame_index) {
+    Assets::Atlas* atlas = Assets::Atlases.find(atlas_name);
+    add_sprite_component(w, e, atlas, frame_index);
 }
 
 void add_velocity_component(World *w, uint32_t e, float vx, float vy) {

@@ -20,9 +20,13 @@ struct Collider {
     float height;
 };
 
+namespace Assets {
+    struct Atlas;
+}
+
 struct Sprite {
-    const char* atlas_name;
-    uint64_t frame_index;
+    Assets::Atlas* atlas;
+    uint32_t frame_index;
 };
 
 typedef LSMFLOAT2 Velocity;

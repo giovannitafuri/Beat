@@ -1,3 +1,5 @@
 build/
 imgui*
 compile_flags.txt
+tools/
+assets/

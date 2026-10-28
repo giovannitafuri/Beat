@@ -1,5 +1,6 @@
 #include <SDL3/SDL.h>
 #include "Entity.h"
+#include "BatchRenderer.h"
 #include "BeatTime.h"
 #include "Assets.h"
 #include "Level.h"
@@ -80,6 +81,8 @@ int main(int argc, char* argv[]) {
     Assets::init(ctx.renderer);
     init_event_machine();
 
+    BatchRenderer* batch = batch_create(20000);
+
     EditorState editor_state;
     editor_init(ctx.window, ctx.renderer, &editor_state);
 
@@ -145,7 +148,7 @@ int main(int argc, char* argv[]) {
         SDL_SetRenderDrawColor(ctx.renderer, 30, 30, 30, 255);
         SDL_RenderClear(ctx.renderer);
 
-        render_system(world, ctx.renderer, &main_camera);
+        render_system(world, ctx.renderer, &main_camera, batch);
 
         editor_draw_overlay(&editor_state, world, ctx.renderer, &main_camera);
 
@@ -159,6 +162,7 @@ int main(int argc, char* argv[]) {
         events_machine_clear();
     }
 
+    batch_shutdown(batch);
     world_free(world);
 
     editor_shutdown();

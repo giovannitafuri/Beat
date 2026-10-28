@@ -1,10 +1,11 @@
 #include "RenderSystem.h"
+#include "BatchRenderer.h"
 #include "Assets.h"
 #include "Settings.h"
 #include "BeatTime.h"
 #include "LSMath.h"
 
-void render_system(World* world, SDL_Renderer* renderer, Camera* camera) {
+void render_system(World* world, SDL_Renderer* renderer, Camera* camera, BatchRenderer* batch) {
     for (size_t i = 1; i <= world->entityCount; ++i) {
         if (world->componentsMaskList[i] & COMPONENT_SPRITE) {
             float x = 0, y = 0;
@@ -21,21 +22,18 @@ void render_system(World* world, SDL_Renderer* renderer, Camera* camera) {
             }
             
             Sprite& spr = world->spriteList[i];
-            Assets::Atlas* a = Assets::Atlases.find(spr.atlas_name);
+            Assets::Atlas* a = spr.atlas;
             if (a && a->texture) {
-                SDL_FRect dst;
-                dst.x = x - camera->x + (GlobalSettings.screenWidth / 2.0f);
-                dst.y = y - camera->y + (GlobalSettings.screenHeight / 2.0f);
-                dst.w = a->sprite_width;
-                dst.h = a->sprite_height;
-                
-                SDL_FRect src;
-                src.x = spr.frame_index * a->sprite_width;
-                src.y = 0;
-                src.w = a->sprite_width;
-                src.h = a->sprite_height;
-                
-                SDL_RenderTexture(renderer, a->texture, &src, &dst);
+                float dst_x = x - camera->x + (GlobalSettings.screenWidth / 2.0f);
+                float dst_y = y - camera->y + (GlobalSettings.screenHeight / 2.0f);
+                float total_w = (float)(a->num_sprites * a->sprite_width);
+                float u0 = (float)(spr.frame_index * a->sprite_width) / total_w;
+                float u1 = (float)((spr.frame_index + 1) * a->sprite_width) / total_w;
+
+                LSMVECTOR pos_size = { dst_x, dst_y, (float)a->sprite_width, (float)a->sprite_height };
+                LSMVECTOR uv = { u0, 0.0f, u1, 1.0f };
+                SDL_FColor white = { 1.0f, 1.0f, 1.0f, 1.0f };
+                batch_draw_sprite(batch, renderer, pos_size, a->texture, uv, white);
             }
         }
 
@@ -58,15 +56,13 @@ void render_system(World* world, SDL_Renderer* renderer, Camera* camera) {
                 h = world->colliderList[i].height;
             }
 
-            SDL_FRect dst;
-            dst.x = x - camera->x + (GlobalSettings.screenWidth / 2.0f);
-            dst.y = y - camera->y + (GlobalSettings.screenHeight / 2.0f);
-            dst.w = w;
-            dst.h = h;
-
-            // Draw player as a cyan/blue rectangle
-            SDL_SetRenderDrawColor(renderer, 0, 200, 255, 255);
-            SDL_RenderFillRect(renderer, &dst);
+            float dst_x = x - camera->x + (GlobalSettings.screenWidth / 2.0f);
+            float dst_y = y - camera->y + (GlobalSettings.screenHeight / 2.0f);
+            LSMVECTOR pos_size = { dst_x, dst_y, w, h };
+            SDL_FColor cyan = { 0.0f, 0.784f, 1.0f, 1.0f };
+            batch_draw_rect(batch, renderer, pos_size, cyan);
         }
     }
+
+    batch_flush(batch, renderer);
 }

@@ -12,7 +12,7 @@ struct Collision {
     Entity e2;
 };
 
-constexpr uint32_t MAX_COLLISIONS = 1024;
+constexpr uint32_t MAX_COLLISIONS = 100000;
 extern Collision CollisionsList[MAX_COLLISIONS];
 extern uint32_t CollisionsCount;
 

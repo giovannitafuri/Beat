@@ -5,6 +5,8 @@
 #include "Entity.h"
 #include "Camera.h"
 
-void render_system(World* world, SDL_Renderer* renderer, Camera* camera);
+struct BatchRenderer;
+
+void render_system(World* world, SDL_Renderer* renderer, Camera* camera, BatchRenderer* batch);
 
 #endif // RENDER_SYSTEM_H
