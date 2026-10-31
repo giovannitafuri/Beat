@@ -4,17 +4,25 @@
 #include "Entity.h"
 #include <cstdio>
 
-constexpr float CELL_SIZE = 64.0f;
-constexpr uint32_t MAX_ENTITY_PER_CELL = 16;
+constexpr size_t CELL_SIZE = 64;
+constexpr size_t WORLD_WIDTH = 4096;
+constexpr size_t WORLD_HEIGTH = 4096;
+constexpr size_t GRID_COLS = WORLD_WIDTH / CELL_SIZE;
+constexpr size_t GRID_ROWS = WORLD_HEIGTH / CELL_SIZE;
+constexpr size_t TOTAL_CELLS = GRID_COLS * GRID_ROWS;
+
 
 struct Collision {
     Entity e1;
     Entity e2;
 };
 
-constexpr uint32_t MAX_COLLISIONS = 100000;
+constexpr uint32_t MAX_COLLISIONS = 1000000;
 extern Collision CollisionsList[MAX_COLLISIONS];
 extern uint32_t CollisionsCount;
+
+extern uint32_t CellHeads[TOTAL_CELLS];
+extern uint32_t EntityNext[ENTITIES_NUM];
 
 inline int aabb_intersect(Position p1, Collider c1, Position p2, Collider c2) {
     LSMVECTOR pos1, pos2;

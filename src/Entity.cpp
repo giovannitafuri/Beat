@@ -21,20 +21,20 @@ World *world_init() {
     ASSERT(new_world != nullptr, "Failed to allocate World");
     if (!new_world) return nullptr;
 
-    new_world->capacity = START_ENTITY_NUM; 
+    new_world->capacity = ENTITIES_NUM;
     // Entity ID 0 is reserved as the sentinel (NULL_ENTITY / no selection).
     // Initializing entityCount to 0 ensures the first created entity receives ID 1.
     new_world->entityCount = 0;
     new_world->freeListCount = 0;
 
-    new_world->componentsMaskList = (uint64_t*)calloc(START_ENTITY_NUM, sizeof(uint64_t));
-    new_world->positionList       = (Position*)malloc(sizeof(Position) * START_ENTITY_NUM);
-    new_world->prevPositionList       = (Position*)malloc(sizeof(Position) * START_ENTITY_NUM);
-    new_world->status             = (uint32_t*)malloc(sizeof(uint32_t) * START_ENTITY_NUM);
-    new_world->colliderList       = (Collider*)malloc(sizeof(Collider) * START_ENTITY_NUM);
-    new_world->spriteList         = (Sprite*)malloc(sizeof(Sprite) * START_ENTITY_NUM);
-    new_world->velocityList       = (Velocity*)malloc(sizeof(Velocity) * START_ENTITY_NUM);
-    new_world->freeList           = (size_t*)malloc(sizeof(size_t) * START_ENTITY_NUM);
+    new_world->componentsMaskList = (uint64_t*)calloc(ENTITIES_NUM, sizeof(uint64_t));
+    new_world->positionList       = (Position*)malloc(sizeof(Position) * ENTITIES_NUM);
+    new_world->prevPositionList       = (Position*)malloc(sizeof(Position) * ENTITIES_NUM);
+    new_world->status             = (uint32_t*)malloc(sizeof(uint32_t) * ENTITIES_NUM);
+    new_world->colliderList       = (Collider*)malloc(sizeof(Collider) * ENTITIES_NUM);
+    new_world->spriteList         = (Sprite*)malloc(sizeof(Sprite) * ENTITIES_NUM);
+    new_world->velocityList       = (Velocity*)malloc(sizeof(Velocity) * ENTITIES_NUM);
+    new_world->freeList           = (size_t*)malloc(sizeof(size_t) * ENTITIES_NUM);
     
     if (!new_world->componentsMaskList || !new_world->positionList || !new_world->prevPositionList || !new_world->status || !new_world->colliderList || !new_world->spriteList || !new_world->velocityList || !new_world->freeList) {
         free(new_world->componentsMaskList);

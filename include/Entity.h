@@ -6,7 +6,7 @@
 
 #include "Components.h"
 
-constexpr size_t START_ENTITY_NUM = 128;
+constexpr size_t ENTITIES_NUM = 100000;
 
 struct Entity {
     uint64_t id;
