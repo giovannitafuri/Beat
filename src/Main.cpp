@@ -18,6 +18,7 @@
 
 float Time::Delta = 0.0f;
 float Time::Alpha = 0.0f;
+float Time::RealDelta = 0.0f;
 
 struct EngineContext {
     SDL_Window* window;
@@ -91,8 +92,8 @@ int main(int argc, char* argv[]) {
     Camera main_camera = {0.0f, 0.0f, 1.0f};
 
     Entity player = create_entity(world);
-    add_position_component(world, player.id, 400.0f, 300.0f);
-    add_prev_position_component(world, player.id, 400.0f, 300.0f);
+    add_position_component(world, player.id, 8192.0f, 8192.0f);
+    add_prev_position_component(world, player.id, 8192.0f, 8192.0f);
     world->componentsMaskList[player.id] |= COMPONENT_PLAYER;
     add_velocity_component(world, player.id, 0.0f, 0.0f);
     add_collider_component(world, player.id, 32.0f, 32.0f);
@@ -109,6 +110,7 @@ int main(int argc, char* argv[]) {
         if (frame_time > 0.25f) {
             frame_time = 0.25f;
         }
+        Time::RealDelta = frame_time;
         accumulator += frame_time;
 
         while (SDL_PollEvent(&event)) {
@@ -123,7 +125,9 @@ int main(int argc, char* argv[]) {
 
         editor_update(&editor_state, world, &main_camera);
 
-        while (accumulator >= dt) {
+        int substeps = 0;
+        constexpr int MAX_PHYSICS_SUBSTEPS = 2;
+        while (accumulator >= dt && substeps < MAX_PHYSICS_SUBSTEPS) {
             accumulator -= dt;
             Time::Delta = dt;
             if (!editor_state.is_editor_mode) {
@@ -131,12 +135,19 @@ int main(int argc, char* argv[]) {
 
                 collision_system(world);
                 resolve_collision_system(world);
-                camera_movement(world, &main_camera);
                 collisions_list_clear();
             }
+            substeps++;
+        }
+        if (accumulator >= dt) {
+            accumulator = 0.0f;
         }
         Time::Alpha = accumulator / dt;
         last_time = current_time;
+
+        if (!editor_state.is_editor_mode) {
+            camera_movement(world, &main_camera);
+        }
 
         // --- Render ---
         ImGui_ImplSDLRenderer3_NewFrame();

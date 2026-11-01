@@ -5,7 +5,10 @@
 #include "Assets.h"
 #include "BeatTime.h"
 #include "Settings.h"
+#include "Level.h"
 #include <cstring>
+#include <cmath>
+#include <algorithm>
 
 void editor_init(SDL_Window* window, SDL_Renderer* renderer, EditorState* state) {
     IMGUI_CHECKVERSION();
@@ -96,7 +99,134 @@ void editor_update(EditorState* state, World* world, Camera* camera) {
     }
 }
 
+static uint32_t xorshift32_state = 0x12345678;
+static uint32_t fast_rand() {
+    uint32_t x = xorshift32_state;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    xorshift32_state = x;
+    return x;
+}
+
+static float fast_randf(float min, float max) {
+    return min + (float)fast_rand() / 4294967295.0f * (max - min);
+}
+
+void spawn_stress_entities(World* world, size_t count) {
+    if (!world) return;
+
+    size_t available = (world->capacity > world->entityCount + 1) ? (world->capacity - 1 - world->entityCount) : 0;
+    if (count > available) count = available;
+    if (count == 0) return;
+
+    Assets::Atlas* atlas16 = Assets::Atlases.find("particles_16.png");
+    if (!atlas16) atlas16 = Assets::Atlases.find("assets/particles_16.png");
+
+    Assets::Atlas* atlas32 = Assets::Atlases.find("particles_32.png");
+    if (!atlas32) atlas32 = Assets::Atlases.find("assets/particles_32.png");
+
+    Assets::Atlas* atlas64 = Assets::Atlases.find("particles_64.png");
+    if (!atlas64) atlas64 = Assets::Atlases.find("assets/particles_64.png");
+
+    float min_x = 64.0f;
+    float max_x = (float)WORLD_WIDTH - 64.0f;
+    float min_y = 64.0f;
+    float max_y = (float)WORLD_HEIGHT - 64.0f;
+
+    for (size_t i = 0; i < count; ++i) {
+        Entity e = create_entity(world);
+        if (e.id == 0) break;
+
+        uint32_t type = fast_rand() % 3;
+        float size = 16.0f;
+        Assets::Atlas* selected_atlas = atlas16;
+        if (type == 1) {
+            size = 32.0f;
+            selected_atlas = atlas32;
+        } else if (type == 2) {
+            size = 64.0f;
+            selected_atlas = atlas64;
+        }
+
+        float x = fast_randf(min_x, max_x - size);
+        float y = fast_randf(min_y, max_y - size);
+
+        float vx = fast_randf(-150.0f, 150.0f);
+        float vy = fast_randf(-150.0f, 150.0f);
+        if (fabsf(vx) < 30.0f) vx = (vx < 0.0f) ? -60.0f : 60.0f;
+        if (fabsf(vy) < 30.0f) vy = (vy < 0.0f) ? -60.0f : 60.0f;
+
+        uint32_t frame = fast_rand() % 8;
+
+        add_position_component(world, e.id, x, y);
+        add_prev_position_component(world, e.id, x, y);
+        add_velocity_component(world, e.id, vx, vy);
+        add_collider_component(world, e.id, size, size);
+        if (selected_atlas) {
+            add_sprite_component(world, e.id, selected_atlas, frame);
+        }
+    }
+}
+
 void editor_draw_ui(EditorState* state, World* world, Camera* camera) {
+    static float frame_times[120] = {};
+    static int frame_time_idx = 0;
+    static float p99_latency = 0.0f;
+    static float avg_frametime = 0.0f;
+    static int sample_counter = 0;
+
+    float frame_ms = Time::RealDelta * 1000.0f;
+    frame_times[frame_time_idx] = frame_ms;
+    frame_time_idx = (frame_time_idx + 1) % 120;
+    sample_counter++;
+
+    if (sample_counter >= 10) {
+        sample_counter = 0;
+        float sorted[120];
+        memcpy(sorted, frame_times, sizeof(sorted));
+        std::sort(sorted, sorted + 120);
+        p99_latency = sorted[118];
+
+        float sum = 0.0f;
+        for (int i = 0; i < 120; i++) sum += frame_times[i];
+        avg_frametime = sum / 120.0f;
+    }
+
+    ImGui::Begin("Stress Test & Benchmark");
+    float fps = (Time::RealDelta > 0.00001f) ? (1.0f / Time::RealDelta) : 0.0f;
+    ImGui::Text("FPS: %.1f | Avg Frametime: %.2f ms | p99: %.2f ms", (double)fps, (double)avg_frametime, (double)p99_latency);
+    float plot_max = (p99_latency > 33.3f) ? (p99_latency * 1.25f) : 33.3f;
+    ImGui::PlotLines("Frametime (ms)", frame_times, 120, frame_time_idx, nullptr, 0.0f, plot_max, ImVec2(0, 80));
+
+    ImGui::Separator();
+    ImGui::Text("Active Entities: %zu / %zu", world->entityCount, world->capacity - 1);
+    ImGui::Text("Spatial Partitioning: Dense Grid 256x256 (65,536 cells)");
+
+    ImGui::Separator();
+    ImGui::Text("Spawn Benchmark Entities:");
+    if (ImGui::Button("Spawn 1,000")) {
+        spawn_stress_entities(world, 1000);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Spawn 10,000")) {
+        spawn_stress_entities(world, 10000);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Spawn 100,000")) {
+        spawn_stress_entities(world, 100000);
+    }
+
+    if (ImGui::Button("Clear All Entities")) {
+        clear_stress_entities(world);
+    }
+
+    ImGui::Separator();
+    if (ImGui::Button(state->is_editor_mode ? "Switch to PLAY MODE (TAB)" : "Switch to EDITOR MODE (TAB)")) {
+        state->is_editor_mode = !state->is_editor_mode;
+    }
+    ImGui::End();
+
     if (!state->is_editor_mode) {
         return;
     }

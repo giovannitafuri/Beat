@@ -26,11 +26,20 @@ void render_system(World* world, SDL_Renderer* renderer, Camera* camera, BatchRe
             if (a && a->texture) {
                 float dst_x = x - camera->x + (GlobalSettings.screenWidth / 2.0f);
                 float dst_y = y - camera->y + (GlobalSettings.screenHeight / 2.0f);
+                float spr_w = (float)a->sprite_width;
+                float spr_h = (float)a->sprite_height;
+
+                // Frustum culling: skip sprites completely outside the screen
+                if (dst_x + spr_w < 0.0f || dst_x > (float)GlobalSettings.screenWidth ||
+                    dst_y + spr_h < 0.0f || dst_y > (float)GlobalSettings.screenHeight) {
+                    continue;
+                }
+
                 float total_w = (float)(a->num_sprites * a->sprite_width);
                 float u0 = (float)(spr.frame_index * a->sprite_width) / total_w;
                 float u1 = (float)((spr.frame_index + 1) * a->sprite_width) / total_w;
 
-                LSMVECTOR pos_size = { dst_x, dst_y, (float)a->sprite_width, (float)a->sprite_height };
+                LSMVECTOR pos_size = { dst_x, dst_y, spr_w, spr_h };
                 LSMVECTOR uv = { u0, 0.0f, u1, 1.0f };
                 SDL_FColor white = { 1.0f, 1.0f, 1.0f, 1.0f };
                 batch_draw_sprite(batch, renderer, pos_size, a->texture, uv, white);

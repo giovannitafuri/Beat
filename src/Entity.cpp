@@ -117,6 +117,16 @@ void world_clear(World *w) {
     }
 }
 
+void clear_stress_entities(World *w) {
+    if (w->entityCount <= 1) return;
+    for (size_t i = 2; i <= w->entityCount; i++) {
+        w->componentsMaskList[i] = 0;
+        w->status[i]++;
+    }
+    w->entityCount = 1;
+    w->freeListCount = 0;
+}
+
 void world_free(World *w) {
     if (!w) return;
     free(w->componentsMaskList);

@@ -21,5 +21,6 @@ void editor_process_event(SDL_Event* event, EditorState* state, World* world, Ca
 void editor_update(EditorState* state, World* world, Camera* camera);
 void editor_draw_ui(EditorState* state, World* world, Camera* camera);
 void editor_draw_overlay(EditorState* state, World* world, SDL_Renderer* renderer, Camera* camera);
+void spawn_stress_entities(World* world, size_t count);
 
 #endif // EDITOR_H

@@ -6,7 +6,7 @@
 
 #include "Components.h"
 
-constexpr size_t ENTITIES_NUM = 100000;
+constexpr size_t ENTITIES_NUM = 110000;
 
 struct Entity {
     uint64_t id;
@@ -38,6 +38,7 @@ void add_sprite_component(World *w, uint32_t e, Assets::Atlas* atlas, uint32_t f
 void add_sprite_component(World *w, uint32_t e, const char* atlas_name, uint32_t frame_index);
 void add_velocity_component(World *w, uint32_t e, float vx, float vy);
 void world_clear(World *w);
+void clear_stress_entities(World *w);
 void world_free(World *w);
 
 #endif // ENTITY_H
