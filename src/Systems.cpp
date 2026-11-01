@@ -73,8 +73,8 @@ void movement_system(World *w) {
 void resolve_collision_system(World *w) {
     for (uint32_t i = 0; i < CollisionsCount; i++) {
         Collision current_coll = CollisionsList[i];
-        uint64_t id1 = current_coll.e1.id;
-        uint64_t id2 = current_coll.e2.id;
+        uint32_t id1 = current_coll.e1;
+        uint32_t id2 = current_coll.e2;
 
         LSMVECTOR e1pos, e2pos;
         LSMLoadVector(&w->positionList[id1], 2, &e1pos);

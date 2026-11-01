@@ -20,8 +20,11 @@ void editor_init(SDL_Window* window, SDL_Renderer* renderer, EditorState* state)
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
 
+    state->renderer = renderer;
     state->is_editor_mode = true;
     state->draw_colliders_mode = false;
+    state->vsync_enabled = true;
+    SDL_SetRenderVSync(renderer, 1);
     state->selected_entity_id = 0;
     state->is_drawing_rect = false;
     state->rect_start_x = 0;
@@ -199,9 +202,22 @@ void editor_draw_ui(EditorState* state, World* world, Camera* camera) {
     float plot_max = (p99_latency > 33.3f) ? (p99_latency * 1.25f) : 33.3f;
     ImGui::PlotLines("Frametime (ms)", frame_times, 120, frame_time_idx, nullptr, 0.0f, plot_max, ImVec2(0, 80));
 
+    if (ImGui::Checkbox("VSync (Lock to Monitor Hz)", &state->vsync_enabled)) {
+        if (state->renderer) {
+            SDL_SetRenderVSync(state->renderer, state->vsync_enabled ? 1 : 0);
+        }
+    }
+
+    ImGui::SeparatorText("Memory Architecture (Data-Oriented)");
+    ImGui::Text("Pre-allocated RAM: ~19.9 MB (0 B heap/frame)");
+    ImGui::BulletText("World SoA Arrays: 7.42 MB (%zu active)", world->entityCount);
+    ImGui::BulletText("Spatial Grid (262,144 cells): 1.48 MB");
+    ImGui::BulletText("Collision Buffer (8 B / pair): 8.00 MB");
+    ImGui::BulletText("Batch Geometry Buffer: 3.04 MB");
+
     ImGui::Separator();
     ImGui::Text("Active Entities: %zu / %zu", world->entityCount, world->capacity - 1);
-    ImGui::Text("Spatial Partitioning: Dense Grid 256x256 (65,536 cells)");
+    ImGui::Text("Spatial Partitioning: Dense Grid 512x512 (262,144 cells)");
 
     ImGui::Separator();
     ImGui::Text("Spawn Benchmark Entities:");

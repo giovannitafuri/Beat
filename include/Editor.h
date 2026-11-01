@@ -6,8 +6,10 @@
 #include "Camera.h"
 
 struct EditorState {
+    SDL_Renderer* renderer;
     bool is_editor_mode;
     bool draw_colliders_mode;
+    bool vsync_enabled;
     uint32_t selected_entity_id;
     bool is_drawing_rect;
     float rect_start_x;

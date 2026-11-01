@@ -92,8 +92,8 @@ int main(int argc, char* argv[]) {
     Camera main_camera = {0.0f, 0.0f, 1.0f};
 
     Entity player = create_entity(world);
-    add_position_component(world, player.id, 8192.0f, 8192.0f);
-    add_prev_position_component(world, player.id, 8192.0f, 8192.0f);
+    add_position_component(world, player.id, 16384.0f, 16384.0f);
+    add_prev_position_component(world, player.id, 16384.0f, 16384.0f);
     world->componentsMaskList[player.id] |= COMPONENT_PLAYER;
     add_velocity_component(world, player.id, 0.0f, 0.0f);
     add_collider_component(world, player.id, 32.0f, 32.0f);
