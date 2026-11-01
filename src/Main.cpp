@@ -73,6 +73,7 @@ int main(int argc, char* argv[]) {
     }
 
     World* world = world_init();
+    ASSERT(world != nullptr, "world_init failed");
     if (!world) {
         engine_shutdown(&ctx);
         return 1;
@@ -82,6 +83,7 @@ int main(int argc, char* argv[]) {
     init_event_machine();
 
     BatchRenderer* batch = batch_create(20000);
+    ASSERT(batch != nullptr, "batch_create failed");
 
     EditorState editor_state;
     editor_init(ctx.window, ctx.renderer, &editor_state);
@@ -96,7 +98,7 @@ int main(int argc, char* argv[]) {
     add_collider_component(world, player.id, 32.0f, 32.0f);
 
     float dt = 1.0f / 60.0f;
-    float accomulator = 0;
+    float accumulator = 0;
     uint64_t last_time = SDL_GetPerformanceCounter();
     uint64_t freq = SDL_GetPerformanceFrequency();
 
@@ -107,7 +109,7 @@ int main(int argc, char* argv[]) {
         if (frame_time > 0.25f) {
             frame_time = 0.25f;
         }
-        accomulator += frame_time;
+        accumulator += frame_time;
 
         while (SDL_PollEvent(&event)) {
             editor_process_event(&event, &editor_state, world, &main_camera);
@@ -121,11 +123,9 @@ int main(int argc, char* argv[]) {
 
         editor_update(&editor_state, world, &main_camera);
 
-        while (accomulator >= dt) {
-            // Fix Your Timestep
-            accomulator -= dt;
+        while (accumulator >= dt) {
+            accumulator -= dt;
             Time::Delta = dt;
-            // --- Physics & Logic Update ---
             if (!editor_state.is_editor_mode) {
                 movement_system(world);
 
@@ -135,7 +135,7 @@ int main(int argc, char* argv[]) {
                 collisions_list_clear();
             }
         }
-        Time::Alpha = accomulator / dt;
+        Time::Alpha = accumulator / dt;
         last_time = current_time;
 
         // --- Render ---

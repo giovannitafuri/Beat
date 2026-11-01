@@ -28,7 +28,6 @@ struct World {
 };
 
 World *world_init();
-bool world_resize(World *w);
 Entity get_entity(World *w, uint64_t id);
 Entity create_entity(World *w);
 void delete_entity(World *w, Entity e);

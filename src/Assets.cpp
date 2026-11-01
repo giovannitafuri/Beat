@@ -1,5 +1,6 @@
 #include "Assets.h"
 #include <SDL3/SDL.h>
+#include <cstdlib>
 
 namespace Assets {
     BeatMap<Atlas> Atlases(32);
@@ -15,5 +16,10 @@ namespace Assets {
     }
 
     void shutdown() {
+        for (int i = 0; i < LoadedAtlasCount; i++) {
+            free((void*)LoadedAtlasNames[i]);
+            LoadedAtlasNames[i] = nullptr;
+        }
+        LoadedAtlasCount = 0;
     }
 }

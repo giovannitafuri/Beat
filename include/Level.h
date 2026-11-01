@@ -6,9 +6,9 @@
 
 constexpr size_t CELL_SIZE = 64;
 constexpr size_t WORLD_WIDTH = 4096;
-constexpr size_t WORLD_HEIGTH = 4096;
+constexpr size_t WORLD_HEIGHT = 4096;
 constexpr size_t GRID_COLS = WORLD_WIDTH / CELL_SIZE;
-constexpr size_t GRID_ROWS = WORLD_HEIGTH / CELL_SIZE;
+constexpr size_t GRID_ROWS = WORLD_HEIGHT / CELL_SIZE;
 constexpr size_t TOTAL_CELLS = GRID_COLS * GRID_ROWS;
 
 

@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include "Assert.h"
 
 // ============================================================================
 // BeatMap<Value>
@@ -30,6 +31,7 @@ public:
         mask     = capacity - 1;   // NOTE: initial_capacity must be a power of 2
         count    = 0;
         data     = new Item[capacity];
+        ASSERT(data != nullptr, "BeatMap memory allocation failed");
     }
 
     ~BeatMap() {
@@ -177,6 +179,7 @@ private:
         mask     = capacity - 1;
         count    = 0;
         data     = new Item[capacity];
+        ASSERT(data != nullptr, "BeatMap resize allocation failed");
 
         for (size_t i = 0; i < old_capacity; i++) {
             if (old_data[i].hash != 0) {

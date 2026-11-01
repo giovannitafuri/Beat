@@ -36,59 +36,18 @@ World *world_init() {
     new_world->velocityList       = (Velocity*)malloc(sizeof(Velocity) * ENTITIES_NUM);
     new_world->freeList           = (size_t*)malloc(sizeof(size_t) * ENTITIES_NUM);
     
-    if (!new_world->componentsMaskList || !new_world->positionList || !new_world->prevPositionList || !new_world->status || !new_world->colliderList || !new_world->spriteList || !new_world->velocityList || !new_world->freeList) {
-        free(new_world->componentsMaskList);
-        free(new_world->positionList);
-        free(new_world->prevPositionList);
-        free(new_world->status);
-        free(new_world->colliderList);
-        free(new_world->spriteList);
-        free(new_world->velocityList);
-        free(new_world->freeList);
-        free(new_world);
-        ASSERT(false, "Failed to allocate World component arrays");
+    bool arrays_allocated = new_world->componentsMaskList && new_world->positionList &&
+                            new_world->prevPositionList && new_world->status &&
+                            new_world->colliderList && new_world->spriteList &&
+                            new_world->velocityList && new_world->freeList;
+    ASSERT(arrays_allocated, "Failed to allocate World component arrays");
+    if (!arrays_allocated) {
+        world_free(new_world);
         return nullptr;
     }
     
     return new_world;
 } 
-
-bool world_resize(World *w) {
-    size_t new_capacity = w->capacity * 2;
-
-    uint64_t *new_mask      = (uint64_t*)realloc(w->componentsMaskList, sizeof(uint64_t) * new_capacity);
-    Position *new_pos       = (Position*)realloc(w->positionList, sizeof(Position) * new_capacity);
-    Position *new_prev_pos  = (Position*)realloc(w->prevPositionList, sizeof(Position) * new_capacity);
-    uint32_t *new_status    = (uint32_t*)realloc(w->status, sizeof(uint32_t) * new_capacity);
-    Collider *new_collider  = (Collider*)realloc(w->colliderList, sizeof(Collider) * new_capacity);
-    Sprite   *new_sprite    = (Sprite*)realloc(w->spriteList, sizeof(Sprite) * new_capacity);
-    Velocity *new_velocity  = (Velocity*)realloc(w->velocityList, sizeof(Velocity) * new_capacity);
-    size_t   *new_free_list = (size_t*)realloc(w->freeList, sizeof(size_t) * new_capacity);
-
-    if (!new_mask || !new_pos || !new_prev_pos || !new_status || !new_collider || !new_sprite || !new_velocity || !new_free_list) {
-        // If realloc fails, the system is out of memory and we crash anyway.
-        ASSERT(false, "Failed to reallocate World arrays");
-        return false;
-    }
-
-    w->componentsMaskList = new_mask;
-    w->positionList = new_pos;
-    w->prevPositionList = new_prev_pos;
-    w->status = new_status;
-    w->colliderList = new_collider;
-    w->spriteList = new_sprite;
-    w->velocityList = new_velocity;
-    w->freeList = new_free_list;
-    
-    // realloc doesn't zero-initialize the new memory. We only really need to zero the mask.
-    for (size_t i = w->capacity; i < new_capacity; i++) {
-        w->componentsMaskList[i] = 0;
-        w->status[i] = 0;
-    }
-
-    w->capacity = new_capacity;
-    return true;
-}
 
 Entity get_entity(World *w, uint64_t id) {
     Entity new_entity = { id, w->status[id] };
@@ -101,13 +60,7 @@ Entity create_entity(World *w) {
         Entity new_entity = { id, w->status[id] };
         return new_entity;
     }
-    if (w->entityCount + 1 >= w->capacity) {
-        bool resized = world_resize(w);
-        ASSERT(resized, "Error resizing world!");
-        if (!resized) {
-            // If resize failed, report error and try to continue.
-        }
-    }
+    ASSERT(w->entityCount + 1 < w->capacity, "World entity capacity exceeded");
     w->entityCount++;
     Entity new_entity = { w->entityCount, w->status[w->entityCount] };
     return new_entity;

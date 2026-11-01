@@ -3,7 +3,6 @@
 #include <cstdlib>
 #include "Atlas.h"
 #include <SDL3_image/SDL_image.h>
-#include <cstring>
 #include <cstdio>
 #include <SDL3/SDL.h>
 #include "Assert.h"
@@ -18,28 +17,16 @@ namespace Assets {
         filename = filename ? filename + 1 : filepath;
 
         const char* ext = strrchr(filename, '.');
-        if (!ext || strcmp(ext, ".png") != 0) {
-            ASSERT(false, "Error: Only .png files are supported");
-            return false;
-        }
+        ASSERT(ext != nullptr && strcmp(ext, ".png") == 0, "Only .png files are supported");
 
         const char* underscore = strrchr(filename, '_');
-        if (!underscore) {
-            ASSERT(false, "Error: Atlas filename must end with _WIDTH (e.g. _32.png)");
-            return false;
-        }
+        ASSERT(underscore != nullptr, "Atlas filename must end with _WIDTH");
 
         int sprite_width = atoi(underscore + 1);
-        if (sprite_width <= 0) {
-            ASSERT(false, "Error: Invalid sprite width in filename");
-            return false;
-        }
+        ASSERT(sprite_width > 0, "Invalid sprite width in filename");
 
         SDL_Texture* tex = IMG_LoadTexture(g_renderer, filepath);
-        if (!tex) {
-            ASSERT(false, "IMG_LoadTexture Error");
-            return false;
-        }
+        ASSERT(tex != nullptr, "IMG_LoadTexture Error");
         
         float fw, fh;
         SDL_GetTextureSize(tex, &fw, &fh);
