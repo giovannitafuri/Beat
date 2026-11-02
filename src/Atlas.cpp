@@ -38,6 +38,9 @@ namespace Assets {
         atlas.num_sprites = (int)fw / sprite_width;
 
         Atlases.insert(filename, atlas);
+        if (filename != filepath) {
+            Atlases.insert(filepath, atlas);
+        }
 
         if (LoadedAtlasCount < 64) {
             LoadedAtlasNames[LoadedAtlasCount++] = strdup(filename);

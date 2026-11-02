@@ -42,34 +42,12 @@ void render_system(World* world, SDL_Renderer* renderer, Camera* camera, BatchRe
                 LSMVECTOR pos_size = { dst_x, dst_y, spr_w, spr_h };
                 LSMVECTOR uv = { u0, 0.0f, u1, 1.0f };
                 SDL_FColor white = { 1.0f, 1.0f, 1.0f, 1.0f };
-                batch_draw_sprite(batch, renderer, pos_size, a->texture, uv, white);
-            }
-        }
-
-        if (world->componentsMaskList[i] & COMPONENT_PLAYER) {
-            float x = 0, y = 0;
-            float w = 32.0f, h = 32.0f;
-            if (world->componentsMaskList[i] & COMPONENT_POSITION) {
-                LSMVECTOR pos;
-                LSMLoadVector(&world->positionList[i], 2, &pos);
-                if (world->componentsMaskList[i] & COMPONENT_PREV_POSITION) {
-                    LSMVECTOR prev_pos;
-                    LSMLoadVector(&world->prevPositionList[i], 2, &prev_pos);
-                    pos = prev_pos * (1.0f - Time::Alpha) + pos * Time::Alpha;
+                if (world->componentsMaskList[i] & COMPONENT_ROTATION) {
+                    batch_draw_sprite_rotated(batch, renderer, pos_size, a->texture, uv, white, world->rotationList[i].angle);
+                } else {
+                    batch_draw_sprite(batch, renderer, pos_size, a->texture, uv, white);
                 }
-                x = pos.x;
-                y = pos.y;
             }
-            if (world->componentsMaskList[i] & COMPONENT_COLLIDER) {
-                w = world->colliderList[i].width;
-                h = world->colliderList[i].height;
-            }
-
-            float dst_x = x - camera->x + (GlobalSettings.screenWidth / 2.0f);
-            float dst_y = y - camera->y + (GlobalSettings.screenHeight / 2.0f);
-            LSMVECTOR pos_size = { dst_x, dst_y, w, h };
-            SDL_FColor cyan = { 0.0f, 0.784f, 1.0f, 1.0f };
-            batch_draw_rect(batch, renderer, pos_size, cyan);
         }
     }
 

@@ -19,6 +19,8 @@ void batch_shutdown(BatchRenderer* batch);
 void batch_flush(BatchRenderer* batch, SDL_Renderer* renderer);
 void batch_draw_sprite(BatchRenderer* batch, SDL_Renderer* renderer,
                        LSMVECTOR pos_size, SDL_Texture* texture, LSMVECTOR uv, SDL_FColor color);
+void batch_draw_sprite_rotated(BatchRenderer* batch, SDL_Renderer* renderer,
+                               LSMVECTOR pos_size, SDL_Texture* texture, LSMVECTOR uv, SDL_FColor color, float angle_rad);
 void batch_draw_rect(BatchRenderer* batch, SDL_Renderer* renderer,
                      LSMVECTOR pos_size, SDL_FColor color);
 

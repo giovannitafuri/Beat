@@ -8,6 +8,8 @@ struct InputState {
     bool down;
     bool left;
     bool right;
+    bool shoot;
+    bool shoot_held;
 };
 
 extern InputState CurrentInput;

@@ -21,7 +21,7 @@ void editor_init(SDL_Window* window, SDL_Renderer* renderer, EditorState* state)
     ImGui_ImplSDLRenderer3_Init(renderer);
 
     state->renderer = renderer;
-    state->is_editor_mode = true;
+    state->is_editor_mode = false;
     state->draw_colliders_mode = false;
     state->vsync_enabled = true;
     SDL_SetRenderVSync(renderer, 1);
@@ -30,6 +30,7 @@ void editor_init(SDL_Window* window, SDL_Renderer* renderer, EditorState* state)
     state->rect_start_x = 0;
     state->rect_start_y = 0;
     state->dragged_asset = nullptr;
+    state->score = 0;
 }
 
 void editor_shutdown() {
@@ -119,7 +120,9 @@ static float fast_randf(float min, float max) {
 void spawn_stress_entities(World* world, size_t count) {
     if (!world) return;
 
-    size_t available = (world->capacity > world->entityCount + 1) ? (world->capacity - 1 - world->entityCount) : 0;
+    constexpr size_t RESERVED_GAMEPLAY_SLOTS = 8192;
+    size_t max_benchmark = (world->capacity > RESERVED_GAMEPLAY_SLOTS) ? (world->capacity - RESERVED_GAMEPLAY_SLOTS) : 0;
+    size_t available = (max_benchmark > world->entityCount) ? (max_benchmark - world->entityCount) : 0;
     if (count > available) count = available;
     if (count == 0) return;
 
@@ -208,12 +211,8 @@ void editor_draw_ui(EditorState* state, World* world, Camera* camera) {
         }
     }
 
-    ImGui::SeparatorText("Memory Architecture (Data-Oriented)");
-    ImGui::Text("Pre-allocated RAM: ~19.9 MB (0 B heap/frame)");
-    ImGui::BulletText("World SoA Arrays: 7.42 MB (%zu active)", world->entityCount);
-    ImGui::BulletText("Spatial Grid (262,144 cells): 1.48 MB");
-    ImGui::BulletText("Collision Buffer (8 B / pair): 8.00 MB");
-    ImGui::BulletText("Batch Geometry Buffer: 3.04 MB");
+    ImGui::SeparatorText("Gameplay Stats");
+    ImGui::Text("Asteroids Destroyed (Score): %u", state->score);
 
     ImGui::Separator();
     ImGui::Text("Active Entities: %zu / %zu", world->entityCount, world->capacity - 1);

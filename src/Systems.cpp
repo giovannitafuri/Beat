@@ -4,9 +4,19 @@
 #include "BeatTime.h"
 #include "LSMath.h"
 #include "Level.h"
+#include "Event.h"
 #include <cmath>
 
 void movement_system(World *w) {
+    float player_x = 0.0f, player_y = 0.0f;
+    for (size_t i = 1; i <= w->entityCount; i++) {
+        if (w->componentsMaskList[i] & COMPONENT_PLAYER) {
+            player_x = w->positionList[i].data[0];
+            player_y = w->positionList[i].data[1];
+            break;
+        }
+    }
+
     for (size_t id = 1; id <= w->entityCount; id++) {
         uint64_t mask = w->componentsMaskList[id];
 
@@ -15,15 +25,59 @@ void movement_system(World *w) {
         }
 
         if (mask & COMPONENT_PLAYER) {
-            float speed = 300.0f; // pixels per second
-            LSMVECTOR vel = LSMVectorZero();
-            
-            if (CurrentInput.up)    vel.y = -speed;
-            if (CurrentInput.down)  vel.y = speed;
-            if (CurrentInput.left)  vel.x = -speed;
-            if (CurrentInput.right) vel.x = speed;
+            if (mask & COMPONENT_ROTATION) {
+                float turn_speed = 4.5f;
+                if (CurrentInput.left)  w->rotationList[id].angle -= turn_speed * Time::Delta;
+                if (CurrentInput.right) w->rotationList[id].angle += turn_speed * Time::Delta;
 
-            w->velocityList[id] = LSMStoreFloat2(vel);
+                constexpr float TWO_PI = 6.28318530718f;
+                if (w->rotationList[id].angle < 0.0f) w->rotationList[id].angle += TWO_PI;
+                else if (w->rotationList[id].angle >= TWO_PI) w->rotationList[id].angle -= TWO_PI;
+
+                float dir_x = sinf(w->rotationList[id].angle);
+                float dir_y = -cosf(w->rotationList[id].angle);
+
+                float speed = 350.0f;
+                LSMVECTOR vel = LSMVectorZero();
+                if (CurrentInput.up) {
+                    vel.x = dir_x * speed;
+                    vel.y = dir_y * speed;
+                } else if (CurrentInput.down) {
+                    vel.x = -dir_x * (speed * 0.5f);
+                    vel.y = -dir_y * (speed * 0.5f);
+                }
+                w->velocityList[id] = LSMStoreFloat2(vel);
+
+                static float fire_cooldown = 0.0f;
+                if (fire_cooldown > 0.0f) {
+                    fire_cooldown -= Time::Delta;
+                }
+
+                bool wants_to_shoot = CurrentInput.shoot || (CurrentInput.shoot_held && fire_cooldown <= 0.0f);
+                if (wants_to_shoot && fire_cooldown <= 0.0f) {
+                    fire_cooldown = 0.15f;
+                    CurrentInput.shoot = false;
+
+                    float spawn_x = w->positionList[id].data[0] + 12.0f + dir_x * 16.0f;
+                    float spawn_y = w->positionList[id].data[1] + 12.0f + dir_y * 16.0f;
+
+                    Event shoot_evt;
+                    shoot_evt.type = EVENT_SHOOT;
+                    shoot_evt.data.shoot.x = spawn_x;
+                    shoot_evt.data.shoot.y = spawn_y;
+                    shoot_evt.data.shoot.dir_x = dir_x;
+                    shoot_evt.data.shoot.dir_y = dir_y;
+                    add_event(shoot_evt);
+                }
+            } else {
+                float speed = 300.0f;
+                LSMVECTOR vel = LSMVectorZero();
+                if (CurrentInput.up)    vel.y = -speed;
+                if (CurrentInput.down)  vel.y = speed;
+                if (CurrentInput.left)  vel.x = -speed;
+                if (CurrentInput.right) vel.x = speed;
+                w->velocityList[id] = LSMStoreFloat2(vel);
+            }
         }
 
         if ((mask & COMPONENT_POSITION) && (mask & COMPONENT_VELOCITY)) {
@@ -46,6 +100,13 @@ void movement_system(World *w) {
 
                 if (pos.y < 0.0f) pos.y = 0.0f;
                 else if (pos.y + height > (float)WORLD_HEIGHT) pos.y = (float)WORLD_HEIGHT - height;
+            } else if (mask & COMPONENT_PROJECTILE) {
+                if (pos.x < 0.0f || pos.x + width > (float)WORLD_WIDTH ||
+                    pos.y < 0.0f || pos.y + height > (float)WORLD_HEIGHT ||
+                    fabsf(pos.x - player_x) > 2000.0f || fabsf(pos.y - player_y) > 2000.0f) {
+                    delete_entity(w, {id, w->status[id]});
+                    continue;
+                }
             } else {
                 if (pos.x < 0.0f) {
                     pos.x = 0.0f;
@@ -75,6 +136,24 @@ void resolve_collision_system(World *w) {
         Collision current_coll = CollisionsList[i];
         uint32_t id1 = current_coll.e1;
         uint32_t id2 = current_coll.e2;
+
+        bool e1_proj = (w->componentsMaskList[id1] & COMPONENT_PROJECTILE) != 0;
+        bool e2_proj = (w->componentsMaskList[id2] & COMPONENT_PROJECTILE) != 0;
+
+        if (e1_proj || e2_proj) {
+            uint32_t proj_id = e1_proj ? id1 : id2;
+            uint32_t other_id = e1_proj ? id2 : id1;
+
+            if (!(w->componentsMaskList[other_id] & COMPONENT_PLAYER) &&
+                (w->componentsMaskList[other_id] & COMPONENT_COLLIDER)) {
+                Event hit_evt;
+                hit_evt.type = EVENT_ASTEROID_HIT;
+                hit_evt.data.asteroid_hit.asteroid_id = other_id;
+                hit_evt.data.asteroid_hit.projectile_id = proj_id;
+                add_event(hit_evt);
+            }
+            continue;
+        }
 
         LSMVECTOR e1pos, e2pos;
         LSMLoadVector(&w->positionList[id1], 2, &e1pos);

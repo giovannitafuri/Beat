@@ -10,10 +10,16 @@ typedef enum {
     COMPONENT_SPRITE        = 1 << 2,
     COMPONENT_VELOCITY      = 1 << 3,
     COMPONENT_PLAYER        = 1 << 4,
-    COMPONENT_PREV_POSITION = 1 << 5
+    COMPONENT_PREV_POSITION = 1 << 5,
+    COMPONENT_PROJECTILE    = 1 << 6,
+    COMPONENT_ROTATION      = 1 << 7
 } ComponentType;
 
 typedef LSMFLOAT2 Position;
+
+struct Rotation {
+    float angle;
+};
 
 struct Collider {
     float width;

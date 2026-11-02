@@ -34,12 +34,14 @@ World *world_init() {
     new_world->colliderList       = (Collider*)malloc(sizeof(Collider) * ENTITIES_NUM);
     new_world->spriteList         = (Sprite*)malloc(sizeof(Sprite) * ENTITIES_NUM);
     new_world->velocityList       = (Velocity*)malloc(sizeof(Velocity) * ENTITIES_NUM);
+    new_world->rotationList       = (Rotation*)malloc(sizeof(Rotation) * ENTITIES_NUM);
     new_world->freeList           = (size_t*)malloc(sizeof(size_t) * ENTITIES_NUM);
     
     bool arrays_allocated = new_world->componentsMaskList && new_world->positionList &&
                             new_world->prevPositionList && new_world->status &&
                             new_world->colliderList && new_world->spriteList &&
-                            new_world->velocityList && new_world->freeList;
+                            new_world->velocityList && new_world->rotationList &&
+                            new_world->freeList;
     ASSERT(arrays_allocated, "Failed to allocate World component arrays");
     if (!arrays_allocated) {
         world_free(new_world);
@@ -60,7 +62,9 @@ Entity create_entity(World *w) {
         Entity new_entity = { id, w->status[id] };
         return new_entity;
     }
-    ASSERT(w->entityCount + 1 < w->capacity, "World entity capacity exceeded");
+    if (w->entityCount + 1 >= w->capacity) {
+        return { 0, 0 };
+    }
     w->entityCount++;
     Entity new_entity = { w->entityCount, w->status[w->entityCount] };
     return new_entity;
@@ -99,6 +103,13 @@ void add_sprite_component(World *w, uint32_t e, Assets::Atlas* atlas, uint32_t f
 
 void add_sprite_component(World *w, uint32_t e, const char* atlas_name, uint32_t frame_index) {
     Assets::Atlas* atlas = Assets::Atlases.find(atlas_name);
+    if (!atlas) {
+        const char* filename = strrchr(atlas_name, '/');
+        if (!filename) filename = strrchr(atlas_name, '\\');
+        filename = filename ? filename + 1 : atlas_name;
+        atlas = Assets::Atlases.find(filename);
+    }
+    ASSERT(atlas != nullptr, "Atlas not found in Assets::Atlases");
     add_sprite_component(w, e, atlas, frame_index);
 }
 
@@ -106,6 +117,12 @@ void add_velocity_component(World *w, uint32_t e, float vx, float vy) {
     Velocity new_vel = {{vx, vy}};
     w->componentsMaskList[e] |= COMPONENT_VELOCITY;
     w->velocityList[e] = new_vel;
+}
+
+void add_rotation_component(World *w, uint32_t e, float angle) {
+    Rotation new_rot = { angle };
+    w->componentsMaskList[e] |= COMPONENT_ROTATION;
+    w->rotationList[e] = new_rot;
 }
 
 void world_clear(World *w) {
@@ -135,6 +152,7 @@ void world_free(World *w) {
     free(w->colliderList);
     free(w->spriteList);
     free(w->velocityList);
+    free(w->rotationList);
     free(w->status);
     free(w->freeList);
     free(w);

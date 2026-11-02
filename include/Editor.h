@@ -15,6 +15,7 @@ struct EditorState {
     float rect_start_x;
     float rect_start_y;
     const char* dragged_asset;
+    uint32_t score;
 };
 
 void editor_init(SDL_Window* window, SDL_Renderer* renderer, EditorState* state);

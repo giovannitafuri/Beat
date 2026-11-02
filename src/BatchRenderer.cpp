@@ -1,6 +1,7 @@
 #include "BatchRenderer.h"
 #include "Assert.h"
 #include <cstdlib>
+#include <cmath>
 
 BatchRenderer* batch_create(size_t max_quads) {
     BatchRenderer* batch = (BatchRenderer*)malloc(sizeof(BatchRenderer));
@@ -78,6 +79,42 @@ void batch_draw_sprite(BatchRenderer* batch, SDL_Renderer* renderer,
     batch->vertices[idx + 1] = { { pos_size.x + pos_size.z, pos_size.y }, color, { uv.z, uv.y } };
     batch->vertices[idx + 2] = { { pos_size.x + pos_size.z, pos_size.y + pos_size.w }, color, { uv.z, uv.w } };
     batch->vertices[idx + 3] = { { pos_size.x, pos_size.y + pos_size.w }, color, { uv.x, uv.w } };
+
+    batch->quad_count++;
+}
+
+void batch_draw_sprite_rotated(BatchRenderer* batch, SDL_Renderer* renderer,
+                               LSMVECTOR pos_size, SDL_Texture* texture, LSMVECTOR uv, SDL_FColor color, float angle_rad) {
+    if (batch->current_texture != texture) {
+        if (batch->quad_count > 0) {
+            batch_flush(batch, renderer);
+        }
+        batch->current_texture = texture;
+    }
+
+    if (batch->quad_count >= batch->max_quads) {
+        batch_flush(batch, renderer);
+    }
+
+    float hw = pos_size.z * 0.5f;
+    float hh = pos_size.w * 0.5f;
+    float cx = pos_size.x + hw;
+    float cy = pos_size.y + hh;
+
+    float cos_a = cosf(angle_rad);
+    float sin_a = sinf(angle_rad);
+
+    float hw_cos = hw * cos_a;
+    float hw_sin = hw * sin_a;
+    float hh_cos = hh * cos_a;
+    float hh_sin = hh * sin_a;
+
+    size_t idx = batch->quad_count * 4;
+
+    batch->vertices[idx + 0] = { { cx - hw_cos + hh_sin, cy - hw_sin - hh_cos }, color, { uv.x, uv.y } };
+    batch->vertices[idx + 1] = { { cx + hw_cos + hh_sin, cy + hw_sin - hh_cos }, color, { uv.z, uv.y } };
+    batch->vertices[idx + 2] = { { cx + hw_cos - hh_sin, cy + hw_sin + hh_cos }, color, { uv.z, uv.w } };
+    batch->vertices[idx + 3] = { { cx - hw_cos - hh_sin, cy - hw_sin + hh_cos }, color, { uv.x, uv.w } };
 
     batch->quad_count++;
 }

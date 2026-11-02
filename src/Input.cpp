@@ -1,7 +1,7 @@
 #include "Input.h"
 #include "Assert.h"
 
-InputState CurrentInput = {false, false, false, false};
+InputState CurrentInput = {false, false, false, false, false, false};
 
 void input_update() {
     int numkeys;
@@ -13,4 +13,12 @@ void input_update() {
     CurrentInput.down = state[SDL_SCANCODE_S] || state[SDL_SCANCODE_DOWN];
     CurrentInput.left = state[SDL_SCANCODE_A] || state[SDL_SCANCODE_LEFT];
     CurrentInput.right = state[SDL_SCANCODE_D] || state[SDL_SCANCODE_RIGHT];
+
+    static bool prev_space = false;
+    bool current_space = state[SDL_SCANCODE_SPACE];
+    if (current_space && !prev_space) {
+        CurrentInput.shoot = true;
+    }
+    CurrentInput.shoot_held = current_space;
+    prev_space = current_space;
 }

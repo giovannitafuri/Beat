@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
     EditorState editor_state;
     editor_init(ctx.window, ctx.renderer, &editor_state);
 
-    Camera main_camera = {0.0f, 0.0f, 1.0f};
+    Camera main_camera = {16384.0f, 16384.0f, 1.0f};
 
     Entity player = create_entity(world);
     add_position_component(world, player.id, 16384.0f, 16384.0f);
@@ -97,6 +97,8 @@ int main(int argc, char* argv[]) {
     world->componentsMaskList[player.id] |= COMPONENT_PLAYER;
     add_velocity_component(world, player.id, 0.0f, 0.0f);
     add_collider_component(world, player.id, 32.0f, 32.0f);
+    add_sprite_component(world, player.id, "ship_32.png", 0);
+    add_rotation_component(world, player.id, 0.0f);
 
     float dt = 1.0f / 60.0f;
     float accumulator = 0;
@@ -124,6 +126,10 @@ int main(int argc, char* argv[]) {
         input_update();
 
         editor_update(&editor_state, world, &main_camera);
+
+        if (!editor_state.is_editor_mode) {
+            event_system(world, &editor_state.score);
+        }
 
         int substeps = 0;
         constexpr int MAX_PHYSICS_SUBSTEPS = 2;
