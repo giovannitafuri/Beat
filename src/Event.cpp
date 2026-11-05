@@ -58,8 +58,8 @@ void event_system(World* world, uint32_t* score) {
                 add_collider_component(world, p.id, 8.0f, 8.0f);
                 world->componentsMaskList[p.id] |= COMPONENT_PROJECTILE;
 
-                Assets::Atlas* laser_atlas = Assets::Atlases.find("particles_16.png");
-                if (!laser_atlas) laser_atlas = Assets::Atlases.find("assets/particles_16.png");
+                Assets::Atlas* laser_atlas = Assets::Atlases.find("particles_16.xpm");
+                if (!laser_atlas) laser_atlas = Assets::Atlases.find("assets/particles_16.xpm");
                 if (laser_atlas) {
                     add_sprite_component(world, p.id, laser_atlas, 2);
                 }
@@ -84,8 +84,8 @@ void event_system(World* world, uint32_t* score) {
                 if (score) (*score)++;
 
                 if (ast_w > 32.5f) {
-                    Assets::Atlas* atlas32 = Assets::Atlases.find("particles_32.png");
-                    if (!atlas32) atlas32 = Assets::Atlases.find("assets/particles_32.png");
+                    Assets::Atlas* atlas32 = Assets::Atlases.find("particles_32.xpm");
+                    if (!atlas32) atlas32 = Assets::Atlases.find("assets/particles_32.xpm");
                     for (int k = 0; k < 2; k++) {
                         Entity child = create_entity(world);
                         if (child.id != 0) {
@@ -100,8 +100,8 @@ void event_system(World* world, uint32_t* score) {
                         }
                     }
                 } else if (ast_w > 16.5f) {
-                    Assets::Atlas* atlas16 = Assets::Atlases.find("particles_16.png");
-                    if (!atlas16) atlas16 = Assets::Atlases.find("assets/particles_16.png");
+                    Assets::Atlas* atlas16 = Assets::Atlases.find("particles_16.xpm");
+                    if (!atlas16) atlas16 = Assets::Atlases.find("assets/particles_16.xpm");
                     for (int k = 0; k < 2; k++) {
                         Entity child = create_entity(world);
                         if (child.id != 0) {

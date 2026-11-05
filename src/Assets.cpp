@@ -11,11 +11,11 @@ namespace Assets {
 
     void init(SDL_Renderer* renderer) {
         g_renderer = renderer;
-        load_atlas("assets/particles_16.png");
-        load_atlas("assets/particles_32.png");
-        load_atlas("assets/particles_64.png");
-        load_atlas("assets/ship_32.png");
-        load_atlas("assets/tiles_32.png");
+        load_atlas("assets/particles_16.xpm");
+        load_atlas("assets/particles_32.xpm");
+        load_atlas("assets/particles_64.xpm");
+        load_atlas("assets/ship_32.xpm");
+        load_atlas("assets/tiles_32.xpm");
     }
 
     void shutdown() {

@@ -15,7 +15,6 @@ struct EditorState {
     bool is_drawing_rect;
     float rect_start_x;
     float rect_start_y;
-    const char* dragged_asset;
     uint32_t score;
     BenchmarkContext benchmark;
 };

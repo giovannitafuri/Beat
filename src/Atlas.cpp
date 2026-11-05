@@ -17,7 +17,7 @@ namespace Assets {
         filename = filename ? filename + 1 : filepath;
 
         const char* ext = strrchr(filename, '.');
-        ASSERT(ext != nullptr && strcmp(ext, ".png") == 0, "Only .png files are supported");
+        ASSERT(ext != nullptr && (strcmp(ext, ".xpm") == 0 || strcmp(ext, ".png") == 0), "Unsupported atlas extension");
 
         const char* underscore = strrchr(filename, '_');
         ASSERT(underscore != nullptr, "Atlas filename must end with _WIDTH");

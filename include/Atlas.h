@@ -12,13 +12,13 @@ namespace Assets {
         int num_sprites;
     };
 
-    // Loads an atlas like "assets/atlas/player_32.png"
+    // Loads an atlas like "assets/particles_16.xpm"
     /*
      * Atlas constraints:
-     * - Format: Only .png files are supported.
+     * - Format: Plain-text .xpm (or .png) files are supported.
      * - Layout: Sprites must be packed in a single horizontal strip (sprite height = image height).
-     * - Naming: The filename MUST end with '_WIDTH.png' where WIDTH is the width 
-     *   of a single sprite in pixels (e.g. "player_walk_32.png"). This avoids 
+     * - Naming: The filename MUST end with '_WIDTH.xpm' where WIDTH is the width 
+     *   of a single sprite in pixels (e.g. "ship_32.xpm"). This avoids 
      *   needing separate metadata files.
      */
     bool load_atlas(const char* filepath);

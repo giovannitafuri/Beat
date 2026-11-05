@@ -29,7 +29,6 @@ void editor_init(SDL_Window* window, SDL_Renderer* renderer, EditorState* state)
     state->is_drawing_rect = false;
     state->rect_start_x = 0;
     state->rect_start_y = 0;
-    state->dragged_asset = nullptr;
     state->score = 0;
     benchmark_init(&state->benchmark);
 }
@@ -87,21 +86,9 @@ void editor_process_event(SDL_Event* event, EditorState* state, World* world, Ca
 }
 
 void editor_update(EditorState* state, World* world, Camera* camera) {
-    ImGuiIO& io = ImGui::GetIO();
-    if (state->is_editor_mode) {
-        if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-            // The mouse was just released or is up
-            if (state->dragged_asset) {
-                // Check if released over game view (not hovering any ImGui window)
-                if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
-                    Entity e = create_entity(world);
-                    add_position_component(world, e.id, io.MousePos.x + camera->x - (GlobalSettings.screenWidth / 2.0f), io.MousePos.y + camera->y - (GlobalSettings.screenHeight / 2.0f));
-                    add_sprite_component(world, e.id, state->dragged_asset, 0);
-                }
-            }
-            state->dragged_asset = nullptr; // Clear it out when mouse is released
-        }
-    }
+    (void)state;
+    (void)world;
+    (void)camera;
 }
 
 static uint32_t xorshift32_state = 0x12345678;
@@ -127,14 +114,14 @@ void spawn_stress_entities(World* world, size_t count) {
     if (count > available) count = available;
     if (count == 0) return;
 
-    Assets::Atlas* atlas16 = Assets::Atlases.find("particles_16.png");
-    if (!atlas16) atlas16 = Assets::Atlases.find("assets/particles_16.png");
+    Assets::Atlas* atlas16 = Assets::Atlases.find("particles_16.xpm");
+    if (!atlas16) atlas16 = Assets::Atlases.find("assets/particles_16.xpm");
 
-    Assets::Atlas* atlas32 = Assets::Atlases.find("particles_32.png");
-    if (!atlas32) atlas32 = Assets::Atlases.find("assets/particles_32.png");
+    Assets::Atlas* atlas32 = Assets::Atlases.find("particles_32.xpm");
+    if (!atlas32) atlas32 = Assets::Atlases.find("assets/particles_32.xpm");
 
-    Assets::Atlas* atlas64 = Assets::Atlases.find("particles_64.png");
-    if (!atlas64) atlas64 = Assets::Atlases.find("assets/particles_64.png");
+    Assets::Atlas* atlas64 = Assets::Atlases.find("particles_64.xpm");
+    if (!atlas64) atlas64 = Assets::Atlases.find("assets/particles_64.xpm");
 
     float min_x = 64.0f;
     float max_x = (float)WORLD_WIDTH - 64.0f;
@@ -288,28 +275,6 @@ void editor_draw_ui(EditorState* state, World* world, Camera* camera) {
     
     ImGui::Separator();
     ImGui::Checkbox("Draw colliders mode", &state->draw_colliders_mode);
-    ImGui::Separator();
-    ImGui::Text("Asset Browser");
-    ImGui::Text("Drag images to place them in the world!");
-
-    for (int i = 0; i < Assets::LoadedAtlasCount; i++) {
-        const char* atlas_name = Assets::LoadedAtlasNames[i];
-        Assets::Atlas* a = Assets::Atlases.find(atlas_name);
-        if (a && a->texture) {
-            ImGui::PushID(i);
-            ImGui::ImageButton(atlas_name, (ImTextureID)(intptr_t)a->texture, ImVec2(64, 64));
-            
-            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
-                ImGui::SetDragDropPayload("DND_ASSET", atlas_name, strlen(atlas_name) + 1);
-                ImGui::Text("Spawning %s", atlas_name);
-                state->dragged_asset = atlas_name;
-                ImGui::EndDragDropSource();
-            }
-
-            if ((i + 1) % 4 != 0) ImGui::SameLine();
-            ImGui::PopID();
-        }
-    }
 
     ImGui::End();
 

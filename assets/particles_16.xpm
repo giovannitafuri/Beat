@@ -1,0 +1,31 @@
+/* XPM */
+static char *particles_16[] = {
+/* columns rows colors chars-per-pixel */
+"128 16 9 1 ",
+"  c None",
+". c #CD3737",
+"X c #E15028",
+"o c #F56E4B",
+"O c #FF8214",
+"+ c #F5961E",
+"@ c #FFC32D",
+"# c #E6A550",
+"$ c #FFAF5F",
+/* pixels */
+"                                                                                                                                ",
+"                                                                                                                                ",
+"      ++++            XXXX            @@@@@            ..              ###                             OO             $$$$$     ",
+"    ++++++++        XXXXXXX         @@@@@@@@         ......          ######             o           OOOOOOOO        $$$$$$$$    ",
+"    +++++++++      XXXXXXXXX       @@@@@@@@@@       .........        #######           oo          OOOOOOOOOO       $$$$$$$$    ",
+"   ++++++++++      XXXXXXXXX       @@@@@@@@@@     ...........       #########          ooo         OOOOOOOOOO      $$$$$$$$$    ",
+"  +++++++++++     XXXXXXXXXXX       @@@@@@@@@@    ...........       #########          ooo         OOOOOOOOOO      $$$$$$$$     ",
+"  ++++++++++++    XXXXXXXXXXX        @@@@@@@@@    ............     ##########         ooooo       OOOOOOOOOOOO      $$$$$$$     ",
+"  ++++++++++++    XXXXXXXXXXXX      @@@@@@@@@     ............     ##########         ooooo       OOOOOOOOOOOO       $$$$$$$    ",
+"   +++++++++++     XXXXXXXXXXX    @@@@@@@@@@      ............     ##########        ooooooo      OOOOOOOOOOOO       $$$$$$$$   ",
+"   ++++++++++      XXXXXXXXXXX    @@@@@@@@@@       ...........     ##########       oooooooo       OOOOOOOOOO         $$$$$$$   ",
+"   ++++++++++      XXXXXXXXXX      @@@@@@@@@       ..........      ##########      oooooooooo      OOOOOOOOOO         $$$$$$$   ",
+"    ++++++++         XXXXXXX       @@@@@@@@@@      .........       #########       oooooooooo         OOOOOOO          $$$$$    ",
+"      +++++            XXXXX       @@       @         ....          ###             oooooooo           OOO               $$$    ",
+"                                                                                                                                ",
+"                                                                                                                                "
+};

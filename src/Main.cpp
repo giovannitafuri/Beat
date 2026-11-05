@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
     world->componentsMaskList[player.id] |= COMPONENT_PLAYER;
     add_velocity_component(world, player.id, 0.0f, 0.0f);
     add_collider_component(world, player.id, 32.0f, 32.0f);
-    add_sprite_component(world, player.id, "ship_32.png", 0);
+    add_sprite_component(world, player.id, "ship_32.xpm", 0);
     add_rotation_component(world, player.id, 0.0f);
 
     float accumulator = 0;
