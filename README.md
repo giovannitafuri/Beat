@@ -24,7 +24,7 @@ Most modern game engines wrap simple operations in layers of indirection: pointe
 
 ## Performance & Benchmarking
 
-The engine was benchmarked under an extreme stress test of **100,000 active colliding entities** with unlocked framerate across a continuous 10,000-frame automated capture.
+The engine was benchmarked under an extreme stress test of **100,000 active colliding entities** with unlocked framerate across a continuous 10,000-frame automated capture on an **Intel Core i7-11850H (locked at 2.50 GHz base clock)** running Linux.
 
 ### Frametime Distribution (10,000 frames @ 100k entities)
 
@@ -37,6 +37,8 @@ The engine was benchmarked under an extreme stress test of **100,000 active coll
 Due to the decoupled loop, render-only frames complete in ~1.9 ms, while simulation frames execute the full 100,000-body physics step in ~12 ms, well within the 16.67 ms (60 Hz) budget.
 
 ### Hardware Profiling (`perf stat` on Linux)
+
+Test platform: **Intel Core i7-11850H @ 2.50 GHz** (pinned frequency, Linux `x86_64`).
 
 User-space hardware counters (`:u`):
 - **L3 / Last Level Cache Hit Rate:** **99.70%**
