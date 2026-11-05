@@ -6,6 +6,7 @@
 #include "Level.h"
 #include "Event.h"
 #include "Editor.h"
+#include "Benchmark.h"
 #include "RenderSystem.h"
 #include "Camera.h"
 #include "Input.h"
@@ -131,6 +132,7 @@ int main(int argc, char* argv[]) {
             event_system(world, &editor_state.score);
         }
 
+        uint64_t phys_start = SDL_GetPerformanceCounter();
         int substeps = 0;
         constexpr int MAX_PHYSICS_SUBSTEPS = 2;
         while (accumulator >= dt && substeps < MAX_PHYSICS_SUBSTEPS) {
@@ -145,6 +147,9 @@ int main(int argc, char* argv[]) {
             }
             substeps++;
         }
+        uint64_t phys_end = SDL_GetPerformanceCounter();
+        float physics_ms = (float)(((double)(phys_end - phys_start) * 1000.0) / (double)freq);
+
         if (accumulator >= dt) {
             accumulator = 0.0f;
         }
@@ -156,6 +161,7 @@ int main(int argc, char* argv[]) {
         }
 
         // --- Render ---
+        uint64_t render_start = SDL_GetPerformanceCounter();
         ImGui_ImplSDLRenderer3_NewFrame();
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
@@ -174,9 +180,15 @@ int main(int argc, char* argv[]) {
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), ctx.renderer);
 
         SDL_RenderPresent(ctx.renderer);
+        uint64_t render_end = SDL_GetPerformanceCounter();
+        float render_ms = (float)(((double)(render_end - render_start) * 1000.0) / (double)freq);
 
         // --- End of Frame ---
         events_machine_clear();
+
+        uint64_t frame_end = SDL_GetPerformanceCounter();
+        float total_ms = (float)(((double)(frame_end - current_time) * 1000.0) / (double)freq);
+        benchmark_record_frame(&editor_state.benchmark, physics_ms, render_ms, total_ms);
     }
 
     batch_shutdown(batch);

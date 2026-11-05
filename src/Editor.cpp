@@ -31,6 +31,7 @@ void editor_init(SDL_Window* window, SDL_Renderer* renderer, EditorState* state)
     state->rect_start_y = 0;
     state->dragged_asset = nullptr;
     state->score = 0;
+    benchmark_init(&state->benchmark);
 }
 
 void editor_shutdown() {
@@ -234,6 +235,36 @@ void editor_draw_ui(EditorState* state, World* world, Camera* camera) {
 
     if (ImGui::Button("Clear All Entities")) {
         clear_stress_entities(world);
+    }
+
+    ImGui::Separator();
+    ImGui::SeparatorText("DoD Benchmark Session (10k Frames)");
+    BenchmarkContext* bench = &state->benchmark;
+    if (bench->state == BenchmarkState::IDLE) {
+        if (ImGui::Button("Run Benchmark (10,000 frames)")) {
+            benchmark_start(bench, 10000);
+        }
+    } else if (bench->state == BenchmarkState::RECORDING) {
+        float progress = (bench->target_samples > 0) ? ((float)bench->current_sample / (float)bench->target_samples) : 0.0f;
+        ImGui::ProgressBar(progress, ImVec2(0.0f, 0.0f));
+        ImGui::Text("Sampling: %zu / %zu frames", bench->current_sample, bench->target_samples);
+    } else if (bench->state == BenchmarkState::COMPLETED) {
+        ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Benchmark Completed (%u frames)", bench->result.total_samples);
+        ImGui::Text("Min:  %.3f ms", (double)bench->result.min_ms);
+        ImGui::Text("Max:  %.3f ms", (double)bench->result.max_ms);
+        ImGui::Text("Avg:  %.3f ms", (double)bench->result.avg_ms);
+        ImGui::Text("p50:  %.3f ms", (double)bench->result.p50_ms);
+        ImGui::Text("p99:  %.3f ms", (double)bench->result.p99_ms);
+        ImGui::Text("Missed 144Hz (> 6.94ms):  %u", bench->result.missed_144hz);
+        ImGui::Text("Missed 60Hz  (> 16.67ms): %u", bench->result.missed_60hz);
+
+        if (ImGui::Button("Export to CSV")) {
+            benchmark_export_csv(bench, "benchmark_results.csv");
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Run Again")) {
+            benchmark_start(bench, 10000);
+        }
     }
 
     ImGui::Separator();

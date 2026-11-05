@@ -4,6 +4,7 @@
 #include <SDL3/SDL.h>
 #include "Entity.h"
 #include "Camera.h"
+#include "Benchmark.h"
 
 struct EditorState {
     SDL_Renderer* renderer;
@@ -16,6 +17,7 @@ struct EditorState {
     float rect_start_y;
     const char* dragged_asset;
     uint32_t score;
+    BenchmarkContext benchmark;
 };
 
 void editor_init(SDL_Window* window, SDL_Renderer* renderer, EditorState* state);
