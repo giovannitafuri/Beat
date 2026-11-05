@@ -280,7 +280,7 @@ void editor_draw_ui(EditorState* state, World* world, Camera* camera) {
     ImGui::Begin("Beat Engine - Editor");
     ImGui::Text("Editor Mode Active");
     ImGui::Text("Press TAB to toggle Play mode");
-    ImGui::Text("Delta Time: %.4f", (double)Time::Delta);
+    ImGui::Text("Target Delta Time: %.4f", (double)Time::TargetDelta);
     ImGui::Text("Entities: %zu", world->entityCount);
     
     ImGui::Separator();

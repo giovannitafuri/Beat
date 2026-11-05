@@ -17,7 +17,6 @@
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
 
-float Time::Delta = 0.0f;
 float Time::Alpha = 0.0f;
 float Time::RealDelta = 0.0f;
 
@@ -101,7 +100,6 @@ int main(int argc, char* argv[]) {
     add_sprite_component(world, player.id, "ship_32.png", 0);
     add_rotation_component(world, player.id, 0.0f);
 
-    float dt = 1.0f / 60.0f;
     float accumulator = 0;
     uint64_t last_time = SDL_GetPerformanceCounter();
     uint64_t freq = SDL_GetPerformanceFrequency();
@@ -135,9 +133,8 @@ int main(int argc, char* argv[]) {
         uint64_t phys_start = SDL_GetPerformanceCounter();
         int substeps = 0;
         constexpr int MAX_PHYSICS_SUBSTEPS = 2;
-        while (accumulator >= dt && substeps < MAX_PHYSICS_SUBSTEPS) {
-            accumulator -= dt;
-            Time::Delta = dt;
+        while (accumulator >= Time::TargetDelta && substeps < MAX_PHYSICS_SUBSTEPS) {
+            accumulator -= Time::TargetDelta;
             if (!editor_state.is_editor_mode) {
                 movement_system(world);
 
@@ -150,10 +147,10 @@ int main(int argc, char* argv[]) {
         uint64_t phys_end = SDL_GetPerformanceCounter();
         float physics_ms = (float)(((double)(phys_end - phys_start) * 1000.0) / (double)freq);
 
-        if (accumulator >= dt) {
+        if (accumulator >= Time::TargetDelta) {
             accumulator = 0.0f;
         }
-        Time::Alpha = accumulator / dt;
+        Time::Alpha = accumulator / Time::TargetDelta;
         last_time = current_time;
 
         if (!editor_state.is_editor_mode) {

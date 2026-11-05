@@ -27,8 +27,8 @@ void movement_system(World *w) {
         if (mask & COMPONENT_PLAYER) {
             if (mask & COMPONENT_ROTATION) {
                 float turn_speed = 4.5f;
-                if (CurrentInput.left)  w->rotationList[id].angle -= turn_speed * Time::Delta;
-                if (CurrentInput.right) w->rotationList[id].angle += turn_speed * Time::Delta;
+                if (CurrentInput.left)  w->rotationList[id].angle -= turn_speed * Time::TargetDelta;
+                if (CurrentInput.right) w->rotationList[id].angle += turn_speed * Time::TargetDelta;
 
                 constexpr float TWO_PI = 6.28318530718f;
                 if (w->rotationList[id].angle < 0.0f) w->rotationList[id].angle += TWO_PI;
@@ -50,7 +50,7 @@ void movement_system(World *w) {
 
                 static float fire_cooldown = 0.0f;
                 if (fire_cooldown > 0.0f) {
-                    fire_cooldown -= Time::Delta;
+                    fire_cooldown -= Time::TargetDelta;
                 }
 
                 bool wants_to_shoot = CurrentInput.shoot || (CurrentInput.shoot_held && fire_cooldown <= 0.0f);
@@ -85,7 +85,7 @@ void movement_system(World *w) {
             LSMLoadVector(&w->positionList[id], 2, &pos);
             LSMLoadVector(&w->velocityList[id], 2, &vel);
 
-            pos = pos + vel * Time::Delta;
+            pos = pos + vel * Time::TargetDelta;
 
             float width = 0.0f;
             float height = 0.0f;

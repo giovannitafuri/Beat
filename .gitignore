@@ -3,3 +3,4 @@ imgui*
 compile_flags.txt
 tools/
 assets/
+benchmark_results.csv

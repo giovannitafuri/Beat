@@ -2,7 +2,7 @@
 #define BEAT_TIME_H
 
 namespace Time {
-    extern float Delta;
+    constexpr float TargetDelta = 1.0f / 60.0f;
     extern float Alpha;
     extern float RealDelta;
 }
