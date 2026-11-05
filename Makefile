@@ -9,7 +9,7 @@ BIN_DIR     := $(BUILD_DIR)/bin
 # ==== Compiler and flags ====
 CXX      := g++
 IMGUI_DIR := external/imgui
-CXXFLAGS := -std=c++23 -fno-exceptions -fno-rtti -I$(INC_DIR) -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -Iexternal/lsmath
+CXXFLAGS := -std=c++11 -fno-exceptions -fno-rtti -I$(INC_DIR) -isystem $(IMGUI_DIR) -isystem $(IMGUI_DIR)/backends -isystem external/lsmath
 LDFLAGS  :=
 
 # Extended warnings, always on: help catch bugs at compile time
@@ -60,6 +60,9 @@ all: $(BIN_DIR)/$(TARGET)
 $(BIN_DIR)/$(TARGET): $(OBJS) | $(BIN_DIR)
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
 	@echo "==> Executable built: $@"
+
+# Suppress 3rd-party warnings only for external ImGui translation units
+$(OBJ_DIR)/imgui%.o: CXXFLAGS += -Wno-null-dereference
 
 # Compile each .cpp into .o, also generating dependency files (.d)
 # so changed headers trigger automatic recompilation.

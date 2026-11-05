@@ -179,31 +179,32 @@ void spawn_stress_entities(World* world, size_t count) {
 void editor_draw_ui(EditorState* state, World* world, Camera* camera) {
     static float frame_times[120] = {};
     static int frame_time_idx = 0;
-    static float p99_latency = 0.0f;
-    static float avg_frametime = 0.0f;
-    static int sample_counter = 0;
+    static float displayed_fps = 0.0f;
+    static float displayed_avg = 0.0f;
+    static float displayed_p99 = 0.0f;
+    static float hud_timer = 0.0f;
 
     float frame_ms = Time::RealDelta * 1000.0f;
     frame_times[frame_time_idx] = frame_ms;
     frame_time_idx = (frame_time_idx + 1) % 120;
-    sample_counter++;
 
-    if (sample_counter >= 10) {
-        sample_counter = 0;
+    hud_timer += Time::RealDelta;
+    if (hud_timer >= 0.15f) {
+        hud_timer = 0.0f;
         float sorted[120];
         memcpy(sorted, frame_times, sizeof(sorted));
         std::sort(sorted, sorted + 120);
-        p99_latency = sorted[118];
+        displayed_p99 = sorted[118];
 
         float sum = 0.0f;
         for (int i = 0; i < 120; i++) sum += frame_times[i];
-        avg_frametime = sum / 120.0f;
+        displayed_avg = sum / 120.0f;
+        displayed_fps = (displayed_avg > 0.00001f) ? (1000.0f / displayed_avg) : 0.0f;
     }
 
     ImGui::Begin("Stress Test & Benchmark");
-    float fps = (Time::RealDelta > 0.00001f) ? (1.0f / Time::RealDelta) : 0.0f;
-    ImGui::Text("FPS: %.1f | Avg Frametime: %.2f ms | p99: %.2f ms", (double)fps, (double)avg_frametime, (double)p99_latency);
-    float plot_max = (p99_latency > 33.3f) ? (p99_latency * 1.25f) : 33.3f;
+    ImGui::Text("FPS: %.1f | Avg Frametime: %.2f ms | p99: %.2f ms", (double)displayed_fps, (double)displayed_avg, (double)displayed_p99);
+    float plot_max = (displayed_p99 > 33.3f) ? (displayed_p99 * 1.25f) : 33.3f;
     ImGui::PlotLines("Frametime (ms)", frame_times, 120, frame_time_idx, nullptr, 0.0f, plot_max, ImVec2(0, 80));
 
     if (ImGui::Checkbox("VSync (Lock to Monitor Hz)", &state->vsync_enabled)) {
@@ -216,7 +217,8 @@ void editor_draw_ui(EditorState* state, World* world, Camera* camera) {
     ImGui::Text("Asteroids Destroyed (Score): %u", state->score);
 
     ImGui::Separator();
-    ImGui::Text("Active Entities: %zu / %zu", world->entityCount, world->capacity - 1);
+    size_t active_count = (world->entityCount >= world->freeListCount) ? (world->entityCount - world->freeListCount) : 0;
+    ImGui::Text("Active Entities: %zu / %zu", active_count, world->capacity - 1);
     ImGui::Text("Spatial Partitioning: Dense Grid 512x512 (262,144 cells)");
 
     ImGui::Separator();
@@ -281,7 +283,8 @@ void editor_draw_ui(EditorState* state, World* world, Camera* camera) {
     ImGui::Text("Editor Mode Active");
     ImGui::Text("Press TAB to toggle Play mode");
     ImGui::Text("Target Delta Time: %.4f", (double)Time::TargetDelta);
-    ImGui::Text("Entities: %zu", world->entityCount);
+    size_t active_entities = (world->entityCount >= world->freeListCount) ? (world->entityCount - world->freeListCount) : 0;
+    ImGui::Text("Entities: %zu", active_entities);
     
     ImGui::Separator();
     ImGui::Checkbox("Draw colliders mode", &state->draw_colliders_mode);
